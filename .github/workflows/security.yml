@@ -1,0 +1,164 @@
+name: Security
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'package-lock.json'
+      - 'package.json'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'package-lock.json'
+      - 'package.json'
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Run npm audit
+        run: npm audit
+
+      - name: Run Snyk test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
+
+  code-scanning:
+    name: Code Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: TruffleSecurity Secret Scanning
+        uses: trufflesecurity/trufflehog-actions-scan@master
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  container-scanning:
+    name: Container Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag rinawarp:${{ github.sha }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'rinawarp:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for required files
+        run: |
+          FILES=("LICENSE" "SECURITY.md" "CODE_OF_CONDUCT.md")
+          for file in "${FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
+
+      - name: Verify security headers
+        run: |
+          grep -r "helmet" src/
+          if [ $? -ne 0 ]; then
+            echo "Security headers (helmet) not properly configured"
+            exit 1
+          fi
+
+      - name: Check for sensitive data
+        run: |
+          if grep -r "password\|secret\|key" --exclude-dir={.git,node_modules} .; then
+            echo "Potential sensitive data found in codebase"
+            exit 1
+          fi
+
+  security-report:
+    name: Security Report
+    needs: [security-audit, code-scanning, dependency-review, secret-scanning, container-scanning, compliance-check]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate Security Report
+        run: |
+          echo "# Security Scan Results" > security-report.md
+          echo "## Status of Security Checks" >> security-report.md
+          echo "- Security Audit: ${{ needs.security-audit.result }}" >> security-report.md
+          echo "- Code Scanning: ${{ needs.code-scanning.result }}" >> security-report.md
+          echo "- Dependency Review: ${{ needs.dependency-review.result }}" >> security-report.md
+          echo "- Secret Scanning: ${{ needs.secret-scanning.result }}" >> security-report.md
+          echo "- Container Scanning: ${{ needs.container-scanning.result }}" >> security-report.md
+          echo "- Compliance Check: ${{ needs.compliance-check.result }}" >> security-report.md
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: security-report.md
+
+      - name: Notify on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: 'security-alerts'
+          slack-message: "Security checks failed in ${{ github.repository }}. Please review the security report."
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

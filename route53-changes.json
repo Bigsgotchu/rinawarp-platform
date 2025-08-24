@@ -1,0 +1,28 @@
+{
+    "Changes": [
+        {
+            "Action": "CREATE",
+            "ResourceRecordSet": {
+                "Name": "rinawarptech.com",
+                "Type": "A",
+                "AliasTarget": {
+                    "HostedZoneId": "Z1H1FL5HABSF5",
+                    "DNSName": "rinawarp-alb-1373868117.us-west-2.elb.amazonaws.com",
+                    "EvaluateTargetHealth": true
+                }
+            }
+        },
+        {
+            "Action": "CREATE",
+            "ResourceRecordSet": {
+                "Name": "www.rinawarptech.com",
+                "Type": "A",
+                "AliasTarget": {
+                    "HostedZoneId": "Z1H1FL5HABSF5",
+                    "DNSName": "rinawarp-alb-1373868117.us-west-2.elb.amazonaws.com",
+                    "EvaluateTargetHealth": true
+                }
+            }
+        }
+    ]
+}

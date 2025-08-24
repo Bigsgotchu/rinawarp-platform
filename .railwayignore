@@ -1,0 +1,9 @@
+node_modules/
+infrastructure/
+terraform/
+terraform.zip
+.git/
+dist/
+coverage/
+logs/
+docker/

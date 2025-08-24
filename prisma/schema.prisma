@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  hashedPassword  String
+  refreshToken    String?
+  role            UserRole          @default(USER)
+  stripeCustomerId String?          @unique
+  subscription    UserSubscription?
+  usageRecords    UsageRecord[]
+  emailPreferences EmailPreferences?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model SubscriptionTier {
+  id          String            @id @default(cuid())
+  name        String
+  description String
+  price       Float?
+  currency    String            @default("usd")
+  interval    BillingInterval
+  features    Json
+  stripePriceId String?         @unique
+  active      Boolean           @default(true)
+  subscriptions UserSubscription[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model UserSubscription {
+  id          String           @id @default(cuid())
+  user        User             @relation(fields: [userId], references: [id])
+  userId      String           @unique
+  tier        SubscriptionTier @relation(fields: [tierId], references: [id])
+  tierId      String
+  status      SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean    @default(false)
+  stripeSubscriptionId String   @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model UsageRecord {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  type        UsageType
+  quantity    Int
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  UNPAID
+}
+
+enum UsageType {
+  API_REQUEST
+  COMPLETION_TOKENS
+  PROMPT_TOKENS
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  CUSTOMER
+}
+
+enum EmailEventType {
+  BOUNCE
+  OPEN
+  CLICK
+  SPAM_REPORT
+  UNSUBSCRIBE
+}
+
+model EmailEvent {
+  id        String         @id @default(cuid())
+  user      User           @relation(fields: [userId], references: [id])
+  userId    String
+  type      EmailEventType
+  email     String
+  metadata  Json
+  createdAt DateTime       @default(now())
+}
+
+model EmailPreferences {
+  id                  String    @id @default(cuid())
+  user                User      @relation(fields: [userId], references: [id])
+  userId              String    @unique
+  weeklyReports       Boolean   @default(true)
+  monthlyReports      Boolean   @default(true)
+  usageAlerts         Boolean   @default(true)
+  alertThreshold      Int       @default(80)
+  marketingEmails     Boolean   @default(true)
+  securityAlerts      Boolean   @default(true)
+  reportTime          DateTime  @default("1970-01-01T08:00:00Z") // Default to 8 AM UTC
+  timeZone            String    @default("UTC")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}

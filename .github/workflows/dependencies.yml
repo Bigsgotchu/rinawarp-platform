@@ -1,0 +1,51 @@
+name: Dependencies
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Run weekly on Monday
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Check for updates
+        id: ncu
+        run: |
+          npx npm-check-updates --configFilePath .ncurc.json --target minor > updates.txt
+          cat updates.txt
+          if grep -q "All dependencies match the latest package versions" updates.txt; then
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.ncu.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update dependencies"
+          title: "chore(deps): update dependencies"
+          body: |
+            Automated dependency updates.
+            
+            <details>
+            <summary>Available Updates</summary>
+            
+            ```
+            $(cat updates.txt)
+            ```
+            </details>
+          branch: chore/update-dependencies
+          base: develop
+          labels: dependencies

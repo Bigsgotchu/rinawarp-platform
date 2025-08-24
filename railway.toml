@@ -1,0 +1,20 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 5
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[deploy.envs]
+NODE_ENV = "production"
+
+[[services]]
+name = "api"
+custom_domains = ["api.rinawarptech.com"]
+routes = [
+  { path = "/*", service = "api" }
+]

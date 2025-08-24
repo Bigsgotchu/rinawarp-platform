@@ -1,0 +1,3 @@
+# Cloudflare API configuration
+header = "Authorization: Bearer 2067c6c45521b3b4ff89baab0b1577a5"
+header = "Content-Type: application/json"

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rinawarp Analytics Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #f8f9fa;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-height: 50px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+        }
+        .section-title {
+            color: #007bff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .metric-group {
+            margin-bottom: 20px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .metric-label {
+            font-weight: bold;
+        }
+        .metric-value {
+            color: #28a745;
+        }
+        .metric-value.negative {
+            color: #dc3545;
+        }
+        .chart {
+            width: 100%;
+            margin: 20px 0;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .trend {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        .trend.up {
+            color: #28a745;
+        }
+        .trend.down {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logoUrl}}" alt="Rinawarp" class="logo">
+            <h1>{{type}} Analytics Report</h1>
+            <p>{{date}}</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Revenue Metrics</h2>
+            <div class="metric-group">
+                <div class="metric">
+                    <span class="metric-label">Total Revenue</span>
+                    <span class="metric-value">{{report.revenue.totalRevenue}}
+                        {{#if report.revenue.change.amount}}
+                        <span class="trend {{#if report.revenue.change.amount.[0] === '-'}}down{{else}}up{{/if}}">
+                            ({{report.revenue.change.percentage}})
+                        </span>
+                        {{/if}}
+                    </span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Recurring Revenue</span>
+                    <span class="metric-value">{{report.revenue.recurringRevenue}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">One-time Revenue</span>
+                    <span class="metric-value">{{report.revenue.oneTimeRevenue}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Refunds</span>
+                    <span class="metric-value negative">{{report.revenue.refunds}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Net Revenue</span>
+                    <span class="metric-value">{{report.revenue.netRevenue}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Subscription Metrics</h2>
+            <div class="metric-group">
+                <div class="metric">
+                    <span class="metric-label">Total Subscriptions</span>
+                    <span class="metric-value">{{report.subscriptions.total}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Subscriptions</span>
+                    <span class="metric-value">{{report.subscriptions.active}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Monthly Recurring Revenue</span>
+                    <span class="metric-value">{{report.subscriptions.mrr}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Annual Recurring Revenue</span>
+                    <span class="metric-value">{{report.subscriptions.arr}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Churn Rate</span>
+                    <span class="metric-value">{{report.subscriptions.churnRate}}</span>
+                </div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Users</th>
+                        <th>Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each report.subscriptions.planDistribution}}
+                    <tr>
+                        <td>{{plan}}</td>
+                        <td>{{count}}</td>
+                        <td>{{percentage}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Usage Metrics</h2>
+            <div class="metric-group">
+                <div class="metric">
+                    <span class="metric-label">Total Commands</span>
+                    <span class="metric-value">{{report.usage.commands.total}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Average Commands per User</span>
+                    <span class="metric-value">{{report.usage.commands.average}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Workflows</span>
+                    <span class="metric-value">{{report.usage.workflows.total}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Average Workflows per User</span>
+                    <span class="metric-value">{{report.usage.workflows.average}}</span>
+                </div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Commands</th>
+                        <th>Workflows</th>
+                        <th>Avg/User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each report.usage.byPlan}}
+                    <tr>
+                        <td>{{plan}}</td>
+                        <td>{{commands}}</td>
+                        <td>{{workflows}}</td>
+                        <td>{{averagePerUser}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Customer Metrics</h2>
+            <div class="metric-group">
+                <div class="metric">
+                    <span class="metric-label">Total Customers</span>
+                    <span class="metric-value">{{report.customers.total}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Customers</span>
+                    <span class="metric-value">{{report.customers.active}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">New Customers</span>
+                    <span class="metric-value">{{report.customers.new}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Churned Customers</span>
+                    <span class="metric-value negative">{{report.customers.churned}}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Customer Lifetime Value</span>
+                    <span class="metric-value">{{report.customers.ltv}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This report was automatically generated for {{type}} analytics tracking.</p>
+            <p>View detailed analytics in the <a href="{{dashboardUrl}}">Rinawarp Dashboard</a></p>
+            <p><a href="{{unsubscribeUrl}}">Unsubscribe from {{type}} reports</a></p>
+        </div>
+    </div>
+</body>
+</html>

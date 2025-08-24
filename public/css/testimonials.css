@@ -1,0 +1,116 @@
+.testimonials-section {
+  padding: 4rem 0;
+  background: linear-gradient(135deg, var(--light-blue-1), var(--light-blue-2));
+}
+
+.testimonials-section h2 {
+  text-align: center;
+  color: var(--text-color);
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.testimonial-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+}
+
+.testimonial-content {
+  margin-bottom: 1.5rem;
+}
+
+.testimonial-content blockquote {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+}
+
+.testimonial-content blockquote::before {
+  content: '"';
+  color: var(--primary-color);
+  font-size: 3rem;
+  line-height: 0;
+  margin-right: 0.5rem;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.author-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-color);
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-info strong {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.author-info span {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .testimonials-section {
+    padding: 3rem 0;
+  }
+
+  .testimonials-section h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .testimonial-card {
+    background: #2a2a2a;
+  }
+
+  .testimonial-content blockquote {
+    color: var(--text-color);
+  }
+
+  .author-info strong {
+    color: var(--text-color);
+  }
+}

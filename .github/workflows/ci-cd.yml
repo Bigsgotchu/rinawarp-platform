@@ -1,0 +1,210 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check formatting
+      run: npm run format:check
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Type check
+      run: npm run type-check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rinawarp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Setup test database
+      run: npm run db:setup
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: rinawarp_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+    
+    - name: Run tests
+      run: npm run test:coverage
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: rinawarp_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    
+    - name: Run CodeQL analysis
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    
+    - name: Build and push Docker image
+      run: |
+        docker build -t rinawarp:${{ github.sha }} .
+        docker tag rinawarp:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/rinawarp:staging
+        docker push ${{ secrets.ECR_REGISTRY }}/rinawarp:staging
+    
+    - name: Deploy to staging
+      run: |
+        aws eks update-kubeconfig --name rinawarp-staging
+        helm upgrade --install rinawarp ./infrastructure/helm \
+          --namespace staging \
+          --set image.tag=${{ github.sha }} \
+          --values ./infrastructure/helm/values-staging.yaml
+    
+    - name: Run smoke tests
+      run: npm run test:e2e
+      env:
+        API_URL: https://staging.rinawarp.com
+
+  production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: staging
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: production
+      url: https://rinawarp.com
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+    
+    - name: Deploy to production
+      run: |
+        docker pull ${{ secrets.ECR_REGISTRY }}/rinawarp:staging
+        docker tag ${{ secrets.ECR_REGISTRY }}/rinawarp:staging ${{ secrets.ECR_REGISTRY }}/rinawarp:production
+        docker push ${{ secrets.ECR_REGISTRY }}/rinawarp:production
+        
+        aws eks update-kubeconfig --name rinawarp-production
+        helm upgrade --install rinawarp ./infrastructure/helm \
+          --namespace production \
+          --set image.tag=production \
+          --values ./infrastructure/helm/values-production.yaml
+    
+    - name: Verify deployment
+      run: |
+        curl --fail https://rinawarp.com/health
+        npm run test:e2e
+      env:
+        API_URL: https://rinawarp.com
+
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [production]
+    if: always()
+    
+    steps:
+    - name: Send Slack notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

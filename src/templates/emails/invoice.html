@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Rinawarp Invoice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .logo {
+            max-height: 50px;
+        }
+        .invoice-details {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+        }
+        .invoice-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .invoice-items th,
+        .invoice-items td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .total {
+            text-align: right;
+            font-weight: bold;
+            padding: 10px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logoUrl}}" alt="Rinawarp" class="logo">
+            <h1>Invoice from Rinawarp</h1>
+            <p>Invoice #{{invoiceId}}</p>
+        </div>
+
+        <div class="invoice-details">
+            <p><strong>Due Date:</strong> {{dueDate}}</p>
+            <p><strong>Amount Due:</strong> {{formatMoney amount}}</p>
+            
+            <table class="invoice-items">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>{{description}}</td>
+                        <td>{{quantity}}</td>
+                        <td>{{formatMoney amount}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+
+            <div class="total">
+                <p>Subtotal: {{formatMoney subtotal}}</p>
+                {{#if tax}}
+                <p>Tax: {{formatMoney tax}}</p>
+                {{/if}}
+                <p>Total: {{formatMoney total}}</p>
+            </div>
+
+            <a href="{{viewUrl}}" class="button">View Invoice</a>
+        </div>
+
+        <div class="payment-info">
+            <h3>Payment Information</h3>
+            <p>This invoice will be automatically charged to your default payment method.</p>
+            <p>Payment Method: •••• {{lastFourDigits}}</p>
+        </div>
+
+        <div class="usage-summary">
+            <h3>Usage Summary</h3>
+            <ul>
+                {{#each usageSummary}}
+                <li>{{name}}: {{value}}</li>
+                {{/each}}
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Questions? Contact us at billing@rinawarp.com</p>
+            <p>Rinawarp Technologies Inc.</p>
+            <p>{{companyAddress}}</p>
+            <p><a href="{{unsubscribeUrl}}">Unsubscribe from billing emails</a></p>
+        </div>
+    </div>
+</body>
+</html>

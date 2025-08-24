@@ -1,0 +1,12 @@
+{
+  "upgrade": true,
+  "target": "minor",
+  "reject": [
+    "@types/node",
+    "typescript"
+  ],
+  "format": "group",
+  "groupFunction": "dependencies,devDependencies",
+  "interactive": false,
+  "pre": false
+}
