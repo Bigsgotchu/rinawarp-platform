@@ -8,33 +8,36 @@ datasource db {
 }
 
 model User {
-  id              String            @id @default(cuid())
-  email           String            @unique
-  name            String
-  hashedPassword  String
-  refreshToken    String?
-  role            UserRole          @default(USER)
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String
+  hashedPassword   String
+  refreshToken     String?
+  role             UserRole          @default(USER)
   stripeCustomerId String?          @unique
-  subscription    UserSubscription?
-  usageRecords    UsageRecord[]
+  subscription     UserSubscription?
+  usageRecords     UsageRecord[]
   emailPreferences EmailPreferences?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  emailEvents      EmailEvent[]
+  licenseKeys      LicenseKey[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 model SubscriptionTier {
-  id          String            @id @default(cuid())
-  name        String
-  description String
-  price       Float?
-  currency    String            @default("usd")
-  interval    BillingInterval
-  features    Json
-  stripePriceId String?         @unique
-  active      Boolean           @default(true)
-  subscriptions UserSubscription[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  name           String
+  description    String
+  price          Float?
+  currency       String            @default("usd")
+  interval       BillingInterval
+  features       Json
+  stripePriceId  String?           @unique
+  active         Boolean           @default(true)
+  subscriptions  UserSubscription[]
+  licenseKeys    LicenseKey[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model UserSubscription {
@@ -122,4 +125,22 @@ model EmailPreferences {
   timeZone            String    @default("UTC")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+}
+
+model LicenseKey {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  tier        SubscriptionTier @relation(fields: [tierId], references: [id])
+  tierId      String
+  activatedAt DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([key])
+  @@index([userId])
 }

@@ -2,11 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import UserService from '../services/UserService';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
+import { PrismaClient } from '@prisma/client';
+import type { AuthRequest } from '../types/auth';
+
+const db = new PrismaClient();
 
 class UserController {
-  async getProfile(req: Request, res: Response, next: NextFunction) {
+  async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const profile = await UserService.getUserProfile(userId);
       res.json(profile);
     } catch (error) {
@@ -14,9 +18,9 @@ class UserController {
     }
   }
 
-  async updateProfile(req: Request, res: Response, next: NextFunction) {
+  async updateProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const { name, email, preferences } = req.body;
 
       const updatedProfile = await UserService.updateProfile(userId, {
@@ -31,9 +35,9 @@ class UserController {
     }
   }
 
-  async deleteAccount(req: Request, res: Response, next: NextFunction) {
+  async deleteAccount(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       await UserService.deleteAccount(userId);
       res.status(204).send();
     } catch (error) {
@@ -41,9 +45,9 @@ class UserController {
     }
   }
 
-  async getUsageMetrics(req: Request, res: Response, next: NextFunction) {
+  async getUsageMetrics(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const { period } = req.query;
 
       if (period && !['daily', 'monthly'].includes(period as string)) {
@@ -61,9 +65,9 @@ class UserController {
     }
   }
 
-  async getBillingHistory(req: Request, res: Response, next: NextFunction) {
+  async getBillingHistory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const limit = parseInt(req.query.limit as string) || 10;
       const offset = parseInt(req.query.offset as string) || 0;
 
@@ -74,9 +78,9 @@ class UserController {
     }
   }
 
-  async getSubscriptionHistory(req: Request, res: Response, next: NextFunction) {
+  async getSubscriptionHistory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const history = await UserService.getSubscriptionHistory(userId);
       res.json(history);
     } catch (error) {
@@ -84,9 +88,9 @@ class UserController {
     }
   }
 
-  async updatePreferences(req: Request, res: Response, next: NextFunction) {
+  async updatePreferences(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { userId } = req.user!;
+      const { userId } = req.user;
       const { preferences } = req.body;
 
       await UserService.updatePreferences(userId, preferences);
@@ -97,9 +101,9 @@ class UserController {
   }
 
   // Admin-only endpoints
-  async getAllUsers(req: Request, res: Response, next: NextFunction) {
+  async getAllUsers(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      if (req.user!.role !== 'ADMIN') {
+      if (req.user.role !== 'ADMIN') {
         throw new AppError('Unauthorized', 'UNAUTHORIZED', 403);
       }
 
@@ -125,9 +129,9 @@ class UserController {
     }
   }
 
-  async getUserById(req: Request, res: Response, next: NextFunction) {
+  async getUserById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      if (req.user!.role !== 'ADMIN') {
+      if (req.user.role !== 'ADMIN') {
         throw new AppError('Unauthorized', 'UNAUTHORIZED', 403);
       }
 
@@ -157,9 +161,9 @@ class UserController {
     }
   }
 
-  async updateUserStatus(req: Request, res: Response, next: NextFunction) {
+  async updateUserStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      if (req.user!.role !== 'ADMIN') {
+      if (req.user.role !== 'ADMIN') {
         throw new AppError('Unauthorized', 'UNAUTHORIZED', 403);
       }
 
@@ -182,9 +186,9 @@ class UserController {
     }
   }
 
-  async getUserStats(req: Request, res: Response, next: NextFunction) {
+  async getUserStats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      if (req.user!.role !== 'ADMIN') {
+      if (req.user.role !== 'ADMIN') {
         throw new AppError('Unauthorized', 'UNAUTHORIZED', 403);
       }
 

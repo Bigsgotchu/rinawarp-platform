@@ -26,10 +26,18 @@ export class CommandService {
       };
     } catch (error) {
       logger.error('Command execution failed:', error);
+      if (error instanceof Error) {
+        const cmdError = error as any;
+        return {
+          output: cmdError.stderr || '',
+          exitCode: cmdError.code || 1,
+          error: cmdError.message,
+        };
+      }
       return {
-        output: error.stderr,
-        exitCode: error.code || 1,
-        error: error.message,
+        output: '',
+        exitCode: 1,
+        error: 'Unknown error occurred',
       };
     }
   }

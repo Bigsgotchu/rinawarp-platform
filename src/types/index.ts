@@ -1,3 +1,48 @@
+import { User, Subscription, SubscriptionPlan } from '@prisma/client';
+
+// Re-export canonical auth types
+export type { AuthPayload, AuthRequest, AuthResponse } from './auth';
+
+export interface PaymentMethodResponse {
+  id: string;
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+}
+
+export interface SubscriptionDetails {
+  id: string;
+  plan: SubscriptionPlan;
+  status: string;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  features: Record<string, any>;
+  usage: {
+    commands: {
+      used: number;
+      limit: number;
+    };
+    workflows: {
+      used: number;
+      limit: number;
+    };
+  };
+}
+
+export interface BillingHistoryItem {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'PAID' | 'FAILED' | 'PENDING';
+  description: string;
+  metadata: Record<string, any>;
+  createdAt: Date;
+}
+
+export type { User, Subscription, SubscriptionPlan };
+
 export * from './errors';
 
 export interface Command {

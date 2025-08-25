@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../types/auth';
 import { AuthService } from '../services/AuthService';
 import { logger } from '../utils/logger';
 

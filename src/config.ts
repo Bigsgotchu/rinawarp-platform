@@ -30,7 +30,7 @@ export default {
     unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET || 'your-secret-key-here',
   },
   email: {
-    from: 'RinaWarp Terminal <support@rinawarptech.com>'
+    from: 'RinaWarp Terminal <support@rinawarptech.com>',
     smtp: {
       host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -58,10 +58,7 @@ export default {
         time: process.env.MONTHLY_REPORTS_TIME || '08:00',
         day: parseInt(process.env.MONTHLY_REPORTS_DAY || '1') // 1st of month
       }
-    }
-  },
-  appUrl: process.env.APP_URL || 'https://rinawarptech.com',
-  analytics: {
+    },
     enabled: process.env.ANALYTICS_ENABLED === 'true',
     trackingId: process.env.ANALYTICS_TRACKING_ID,
     features: {
@@ -74,5 +71,6 @@ export default {
         }
       }
     }
-  }
+  },
+  appUrl: process.env.APP_URL || 'https://rinawarptech.com'
 };

@@ -19,7 +19,7 @@ describe('AnalyticsSubscriptionController', () => {
 
     // Mock request object
     mockReq = {
-      user: { id: 'test-user-123' },
+      user: { userId: 'test-user-123', email: 'test@example.com', role: 'USER', plan: 'free' as any },
       query: {},
       body: {}
     };
@@ -64,7 +64,7 @@ describe('AnalyticsSubscriptionController', () => {
       );
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockReq.user!.id },
+        where: { id: mockReq.user!.userId },
         select: { emailPreferences: true }
       });
       expect(mockRes.json).toHaveBeenCalledWith(mockPreferences);
@@ -120,7 +120,7 @@ describe('AnalyticsSubscriptionController', () => {
       );
 
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
-        where: { id: mockReq.user!.id },
+        where: { id: mockReq.user!.userId },
         data: { emailPreferences: validPreferences },
         select: { emailPreferences: true }
       });

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/AuthService';
-import { logger } from '../utils/logger';
+import AuthService from '../services/AuthService';
+import logger from '../utils/logger';
+import type { AuthPayload } from '../types/auth';
 
 export interface TwoFactorRequest extends Request {
   twoFactorVerified?: boolean;
@@ -13,14 +14,14 @@ export const require2FA = async (req: TwoFactorRequest, res: Response, next: Nex
       return next();
     }
 
-    const user = req.user;
+    const user = req.user as AuthPayload | undefined;
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
     // Check if user has 2FA enabled
     const authService = AuthService.getInstance();
-    const has2FA = await authService.has2FAEnabled(user.id);
+    const has2FA = await authService.has2FAEnabled(user.userId);
     
     if (!has2FA) {
       return next();
@@ -36,7 +37,7 @@ export const require2FA = async (req: TwoFactorRequest, res: Response, next: Nex
     }
 
     // Verify 2FA token
-    const isValid = await authService.verify2FAToken(user.id, token);
+    const isValid = await authService.verify2FAToken(user.userId, token);
     if (!isValid) {
       return res.status(401).json({
         error: 'Invalid 2FA token',
@@ -55,7 +56,7 @@ export const require2FA = async (req: TwoFactorRequest, res: Response, next: Nex
 
 export const optional2FA = async (req: TwoFactorRequest, res: Response, next: NextFunction) => {
   try {
-    const user = req.user;
+    const user = req.user as AuthPayload | undefined;
     if (!user) {
       return next();
     }
@@ -63,7 +64,7 @@ export const optional2FA = async (req: TwoFactorRequest, res: Response, next: Ne
     const token = req.headers['x-2fa-token'];
     if (token && typeof token === 'string') {
       const authService = AuthService.getInstance();
-      const isValid = await authService.verify2FAToken(user.id, token);
+      const isValid = await authService.verify2FAToken(user.userId, token);
       if (isValid) {
         req.twoFactorVerified = true;
       }

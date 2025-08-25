@@ -33,7 +33,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.register(req, res);
+      await AuthController.register(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(
@@ -60,7 +60,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.register(req, res);
+      await AuthController.register(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith(
@@ -92,7 +92,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.login(req, res);
+      await AuthController.login(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
@@ -115,7 +115,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.login(req, res);
+      await AuthController.login(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(
@@ -137,7 +137,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.refreshToken(req, res);
+      await AuthController.refreshToken(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(
@@ -156,7 +156,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.refreshToken(req, res);
+      await AuthController.refreshToken(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(
@@ -179,7 +179,7 @@ describe('AuthController', () => {
       });
       const res = createTestResponse();
 
-      await AuthController.logout(req, res);
+      await AuthController.logout(req, res, () => {});
 
       expect(res.status).toHaveBeenCalledWith(204);
     });

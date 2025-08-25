@@ -24,7 +24,7 @@ describe('AIService', () => {
 
   describe('analyzeCommand', () => {
     it('should analyze a command and return suggestions', async () => {
-      const result = await AIService.analyzeCommand('ls', ['-l']);
+      const result = await AIService.analyzeCommand({ command: 'ls', args: ['-l'] });
       
       expect(result.suggestion).toBeDefined();
       expect(result.alternatives).toEqual(['ls -la', 'ls --all']);
@@ -41,7 +41,7 @@ describe('AIService', () => {
         }
       }));
 
-      const result = await AIService.analyzeCommand('ls');
+      const result = await AIService.analyzeCommand({ command: 'ls' });
       
       expect(result.suggestion).toBe('Unable to analyze command at this time.');
       expect(result.alternatives).toEqual([]);
@@ -50,7 +50,7 @@ describe('AIService', () => {
 
   describe('validateCommandSafety', () => {
     it('should validate safe commands', async () => {
-      const result = await AIService.validateCommandSafety('ls', ['-l']);
+      const result = await AIService.validateCommandSafety({ command: 'ls', args: ['-l'] });
       expect(result).toBe(true);
     });
 
@@ -71,7 +71,7 @@ describe('AIService', () => {
         }
       }));
 
-      const result = await AIService.validateCommandSafety('rm', ['-rf', '/']);
+      const result = await AIService.validateCommandSafety({ command: 'rm', args: ['-rf', '/'] });
       expect(result).toBe(false);
     });
   });

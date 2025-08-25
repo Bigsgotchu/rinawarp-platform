@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest, UserRole } from '../types/auth';
 import { UserRole } from '../types/auth';
 import { AppError } from './errorHandler';
 

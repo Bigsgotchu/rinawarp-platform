@@ -1,78 +1,86 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JWTPayload } from '../utils/jwt';
+import AuthService from '../services/AuthService';
+import { ApiError } from '../services/api/ApiClient';
+import logger from '../utils/logger';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
+export async function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED',
+      });
     }
+
+    const isValid = await AuthService.validateAuth();
+    if (!isValid) {
+      return res.status(401).json({
+        error: 'Invalid or expired token',
+        code: 'INVALID_TOKEN',
+      });
+    }
+
+    // Attach user to request
+    const user = AuthService.getCurrentUser();
+    if (!user) {
+      return res.status(401).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    (req as any).user = user;
+    next();
+  } catch (error) {
+    logger.error('Auth middleware error:', error);
+    
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+    });
   }
 }
 
-export const authMiddleware = {
-  validateToken: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) {
-        return res.status(401).json({ error: 'No token provided' });
-      }
-      
-      const decoded = await verifyToken(token);
-      req.user = decoded;
-      next();
-    } catch (error) {
-      res.status(401).json({ error: 'Invalid token' });
-    }
-  },
-
-  requireRole: (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      if (!roles.includes(req.user.role)) {
-        return res.status(403).json({ error: 'Insufficient permissions' });
-      }
-
-      next();
-    };
-  }
-};
-
-import { Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest, JwtPayload } from '../types/auth';
-
-const prisma = new PrismaClient();
-
-const authenticate = async (
-  req: AuthRequest,
+export async function requireSubscription(
+  req: Request,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+) {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      res.status(401).json({ error: 'Authentication required' });
-      return;
+    const user = (req as any).user;
+    if (!user?.subscription) {
+      return res.status(403).json({
+        error: 'Subscription required',
+        code: 'SUBSCRIPTION_REQUIRED',
+      });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-
-    if (!user) {
-      res.status(401).json({ error: 'User not found' });
-      return;
+    if (user.subscription.status !== 'active') {
+      return res.status(403).json({
+        error: 'Subscription inactive',
+        code: 'SUBSCRIPTION_INACTIVE',
+      });
     }
 
-    req.user = user;
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    res.status(401).json({ error: 'Invalid token' });
+    logger.error('Subscription check error:', error);
+    return res.status(500).json({
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+    });
   }
-};
-
-export default authenticate;
+}

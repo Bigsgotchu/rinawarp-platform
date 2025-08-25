@@ -1,16 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth';
 import { logger } from '../../utils/logger';
+import type { AuthRequest, AuthPayload } from '../../types/auth';
+import { UserRole, SubscriptionPlan } from '../../types/auth';
 
 const authService = new AuthService();
-
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-  };
-}
 
 /**
  * Authentication middleware
@@ -41,12 +35,14 @@ export async function authenticate(
       return;
     }
 
-    // Attach user to request
+    // Attach user to request (normalize to AuthPayload)
     req.user = {
-      id: user.id,
+      userId: user.id,
       email: user.email,
       name: user.name,
-    };
+      role: UserRole.USER,
+      plan: SubscriptionPlan.FREE,
+    } as AuthPayload;
 
     next();
   } catch (error) {
@@ -81,12 +77,14 @@ export async function optionalAuthenticate(
     // Get user from token
     const user = await authService.getCurrentUser(token);
     if (user) {
-      // Attach user to request
+      // Attach user to request (normalize to AuthPayload)
       req.user = {
-        id: user.id,
+        userId: user.id,
         email: user.email,
         name: user.name,
-      };
+        role: UserRole.USER,
+        plan: SubscriptionPlan.FREE,
+      } as AuthPayload;
     }
 
     next();

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest, SubscriptionPlan } from '../types/auth';
 import { AppError } from './errorHandler';
 import { SubscriptionPlan } from '../types/auth';
 

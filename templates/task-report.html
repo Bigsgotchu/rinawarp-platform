@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Execution Report - {{taskName}}</title>
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-text: #333333;
+      --color-primary: #2196f3;
+      --color-success: #4caf50;
+      --color-warning: #ff9800;
+      --color-error: #f44336;
+      --color-gray: #9e9e9e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem;
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 2rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .status-success {
+      background: var(--color-success);
+      color: white;
+    }
+
+    .status-failure {
+      background: var(--color-error);
+      color: white;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .metric-title {
+      color: var(--color-gray);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .metric-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .output-container {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .error {
+      color: var(--color-error);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f5f5f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #121212;
+        --color-text: #ffffff;
+      }
+
+      .metric-card {
+        background: #1e1e1e;
+      }
+
+      .output-container {
+        background: #1e1e1e;
+      }
+
+      th {
+        background: #1e1e1e;
+      }
+
+      td {
+        border-bottom-color: #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>{{taskName}}</h1>
+      <div>
+        <span class="status-badge status-{{status}}">{{status}}</span>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="metrics">
+        <div class="metric-card">
+          <h3 class="metric-title">Duration</h3>
+          <p class="metric-value">{{duration}}ms</p>
+        </div>
+        <div class="metric-card">
+          <h3 class="metric-title">Type</h3>
+          <p class="metric-value">{{taskType}}</p>
+        </div>
+        <div class="metric-card">
+          <h3 class="metric-title">Schedule</h3>
+          <p class="metric-value">{{schedule}}</p>
+        </div>
+      </div>
+    </section>
+
+    {{#if error}}
+    <section class="section">
+      <h2>Error Details</h2>
+      <div class="output-container error">
+        <pre>{{error}}</pre>
+      </div>
+    </section>
+    {{/if}}
+
+    {{#if output}}
+    <section class="section">
+      <h2>Output</h2>
+      <div class="output-container">
+        <pre>{{output}}</pre>
+      </div>
+    </section>
+    {{/if}}
+
+    <section class="section">
+      <h2>Environment</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each environment}}
+          <tr>
+            <td>{{@key}}</td>
+            <td>{{this}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>Log File</h2>
+      <p>Complete logs are available at: <code>{{logFile}}</code></p>
+    </section>
+
+    <footer>
+      <p>Generated at: {{timestamp}}</p>
+    </footer>
+  </div>
+</body>
+</html>

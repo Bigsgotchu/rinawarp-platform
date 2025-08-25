@@ -1,3 +1,5 @@
+import { type PrismaClient } from '@prisma/client';
+
 export interface User {
   id: string;
   email: string;
@@ -11,6 +13,44 @@ export interface User {
   updatedAt: Date;
   lastLoginAt?: Date;
   preferences?: UserPreferences;
+}
+
+export type DB = {
+  prisma: PrismaClient;
+  user: User;
+};
+
+export interface AuthPayload {
+  userId: string;
+  email: string;
+  role: UserRole;
+  plan: SubscriptionPlan;
+  name?: string | null;
+  subscription?: {
+    status: string;
+    planId: string;
+    features: string[];
+  } | null;
+}
+
+export interface AuthRequest extends Request {
+  user: AuthPayload;
+}
+
+export interface AuthResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    role: UserRole;
+    plan: SubscriptionPlan;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  };
+  sessionId?: string;
 }
 
 export enum UserRole {
@@ -38,12 +78,6 @@ export interface UserPreferences {
   aiAssistance: boolean;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -51,13 +85,6 @@ export interface LoginCredentials {
 
 export interface RegistrationData extends LoginCredentials {
   name: string;
-}
-
-export interface AuthPayload {
-  userId: string;
-  email: string;
-  role: UserRole;
-  plan: SubscriptionPlan;
 }
 
 export interface RefreshTokenPayload {

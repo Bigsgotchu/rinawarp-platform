@@ -8,19 +8,25 @@ import { SubscriptionPlan } from '../types/auth';
 import logger from '../utils/logger';
 import EmailMonitoringService from './EmailMonitoringService';
 import config from '../config';
+import { prisma } from '../lib/prisma';
+import { ReportType } from '@prisma/client';
+import { HandlebarsTemplateDelegate } from 'handlebars';
 
 interface EmailTemplate {
   subject: string;
   template: HandlebarsTemplateDelegate;
 }
 
-type ReportType = 'daily' | 'weekly' | 'monthly';
+interface DateRange {
+  start: Date;
+  end: Date;
+}
 
 interface ReportConfig {
   type: ReportType;
   recipientEmails: string[];
-  startDate: Date;
-  endDate: Date;
+  dateRange: DateRange;
+  metadata?: Record<string, unknown>;
 }
 
 class AnalyticsEmailService {
@@ -192,7 +198,7 @@ class AnalyticsEmailService {
       });
 
       // Store report in database for historical tracking
-      await db.analyticsReport.create({
+      await prisma.analyticsReport.create({
         data: {
           type,
           date: endDate,
@@ -206,15 +212,15 @@ class AnalyticsEmailService {
       
       // Track failure
       await EmailMonitoringService.trackFailure({
-        type,
+        type: reportConfig.type,
         error: error as Error,
-        recipientCount: recipientEmails.length,
+        recipientCount: reportConfig.recipientEmails.length,
         metadata: {
           startTime: new Date(startTime).toISOString(),
           errorTime: new Date().toISOString(),
           reportPeriod: {
-            start: startDate,
-            end: endDate
+            start: reportConfig.dateRange.start,
+            end: reportConfig.dateRange.end
           }
         }
       });
@@ -232,7 +238,7 @@ class AnalyticsEmailService {
     yesterday.setDate(yesterday.getDate() - 1);
 
     // Get subscribed users
-    const subscribers = await db.user.findMany({
+    const subscribers = await prisma.user.findMany({
       where: {
         emailPreferences: {
           dailyAnalytics: true
@@ -251,7 +257,7 @@ class AnalyticsEmailService {
 
     await this.sendAnalyticsReport({
       type: 'daily',
-      recipientEmails: subscribers.map(user => user.email),
+      recipientEmails: subscribers.map((user: { email: string }) => user.email),
       startDate: yesterday,
       endDate: today
     });
@@ -266,7 +272,7 @@ class AnalyticsEmailService {
     lastWeek.setDate(lastWeek.getDate() - 7);
 
     // Get subscribed users
-    const subscribers = await db.user.findMany({
+    const subscribers = await prisma.user.findMany({
       where: {
         emailPreferences: {
           weeklyAnalytics: true
@@ -285,7 +291,7 @@ class AnalyticsEmailService {
 
     await this.sendAnalyticsReport({
       type: 'weekly',
-      recipientEmails: subscribers.map(user => user.email),
+      recipientEmails: subscribers.map((user: { email: string }) => user.email),
       startDate: lastWeek,
       endDate: today
     });
@@ -300,7 +306,7 @@ class AnalyticsEmailService {
     lastMonth.setMonth(lastMonth.getMonth() - 1);
 
     // Get subscribed users
-    const subscribers = await db.user.findMany({
+    const subscribers = await prisma.user.findMany({
       where: {
         emailPreferences: {
           monthlyAnalytics: true
@@ -319,7 +325,7 @@ class AnalyticsEmailService {
 
     await this.sendAnalyticsReport({
       type: 'monthly',
-      recipientEmails: subscribers.map(user => user.email),
+      recipientEmails: subscribers.map((user: { email: string }) => user.email),
       startDate: lastMonth,
       endDate: today
     });
@@ -334,7 +340,7 @@ class AnalyticsEmailService {
     lastWeek.setDate(lastWeek.getDate() - 7);
 
     await this.sendAnalyticsReport({
-      type: 'test',
+      type: ReportType.TEST,
       recipientEmails: [email],
       startDate: lastWeek,
       endDate: today

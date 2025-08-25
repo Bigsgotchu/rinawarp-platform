@@ -3,7 +3,22 @@
  * Licensed under the MIT License.
  */
 
+const requireEnvVar = (name: string): string => {
+  const value = process.env[name];
+  if (!value && process.env.NODE_ENV === 'production') {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value || '';
+};
+
 export default {
+  // Application configuration
+  app: {
+    env: process.env.NODE_ENV || 'development',
+    apiUrl: requireEnvVar('API_URL'),
+    frontendUrl: requireEnvVar('FRONTEND_URL'),
+  },
+
   // Server configuration
   server: {
     host: process.env.HOST || '0.0.0.0',
@@ -18,22 +33,22 @@ export default {
 
   // Database configuration
   database: {
-    url: process.env.DATABASE_URL,
+    url: requireEnvVar('DATABASE_URL'),
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '10', 10),
-    ssl: process.env.DB_SSL === 'true',
+    ssl: process.env.NODE_ENV === 'production' || process.env.DB_SSL === 'true',
   },
 
   // Redis configuration
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-    password: process.env.REDIS_PASSWORD,
-    tls: process.env.REDIS_TLS === 'true',
+    url: requireEnvVar('REDIS_URL'),
+    password: requireEnvVar('REDIS_PASSWORD'),
+    tls: process.env.NODE_ENV === 'production' || process.env.REDIS_TLS === 'true',
   },
 
   // JWT configuration
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+    secret: requireEnvVar('JWT_SECRET'),
+    refreshSecret: requireEnvVar('JWT_REFRESH_SECRET'),
     accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || '1h',
     refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
   },
@@ -46,7 +61,7 @@ export default {
 
   // OpenAI configuration
   openai: {
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: requireEnvVar('OPENAI_API_KEY'),
     model: process.env.OPENAI_MODEL || 'gpt-4',
     maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10),
   },
@@ -55,12 +70,12 @@ export default {
   email: {
     from: process.env.EMAIL_FROM || 'noreply@rinawarp.com',
     smtp: {
-      host: process.env.SMTP_HOST,
+      host: requireEnvVar('SMTP_HOST'),
       port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_SECURE === 'true',
+      secure: process.env.NODE_ENV === 'production' || process.env.SMTP_SECURE === 'true',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: requireEnvVar('SMTP_USER'),
+        pass: requireEnvVar('SMTP_PASS'),
       },
     },
   },
@@ -68,17 +83,37 @@ export default {
   // Monitoring and logging
   monitoring: {
     sentry: {
-      dsn: process.env.SENTRY_DSN,
+      dsn: requireEnvVar('SENTRY_DSN'),
       environment: process.env.NODE_ENV || 'development',
     },
     logLevel: process.env.LOG_LEVEL || 'info',
-    enableRequestLogging: process.env.ENABLE_REQUEST_LOGGING !== 'false',
+    enableRequestLogging: process.env.NODE_ENV !== 'production' || process.env.ENABLE_REQUEST_LOGGING === 'true',
   },
 
   // Security
   security: {
-    bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10),
-    enableCSRF: process.env.ENABLE_CSRF === 'true',
-    trustProxy: process.env.TRUST_PROXY === 'true',
+    bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
+    enableCSRF: process.env.NODE_ENV === 'production' || process.env.ENABLE_CSRF === 'true',
+    trustProxy: process.env.NODE_ENV === 'production' || process.env.TRUST_PROXY === 'true',
+    cookieSecret: requireEnvVar('COOKIE_SECRET'),
+    sessionDuration: parseInt(process.env.SESSION_DURATION || '86400000', 10),
+  },
+
+  // Payment processing
+  stripe: {
+    secretKey: requireEnvVar('STRIPE_SECRET_KEY'),
+    webhookSecret: requireEnvVar('STRIPE_WEBHOOK_SECRET'),
+  },
+
+  // CDN and DNS
+  cloudflare: {
+    apiToken: requireEnvVar('CLOUDFLARE_API_TOKEN'),
+    zoneId: requireEnvVar('CLOUDFLARE_ZONE_ID'),
+  },
+
+  // Website API configuration
+  websiteApi: {
+    baseUrl: requireEnvVar('WEBSITE_API_URL'),
+    timeout: parseInt(process.env.API_TIMEOUT || '10000', 10),
   },
 };

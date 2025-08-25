@@ -4,11 +4,14 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { SubscriptionPlan } from '../types/auth';
+import type { AuthRequest, SubscriptionPlan } from '../types/auth';
 import AuthService from '../services/AuthService';
 import StripeService from '../services/StripeService';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient();
 
 class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -65,7 +68,7 @@ class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction) {
+  async logout(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId } = req.user;
       const { refreshToken } = req.body;
@@ -96,7 +99,7 @@ class AuthController {
     }
   }
 
-  async createSubscription(req: Request, res: Response, next: NextFunction) {
+  async createSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId } = req.user;
       const { plan, paymentMethodId } = req.body;
@@ -112,7 +115,7 @@ class AuthController {
     }
   }
 
-  async updateSubscription(req: Request, res: Response, next: NextFunction) {
+  async updateSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId } = req.user;
       const { plan } = req.body;
@@ -128,7 +131,7 @@ class AuthController {
     }
   }
 
-  async cancelSubscription(req: Request, res: Response, next: NextFunction) {
+  async cancelSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId } = req.user;
       await StripeService.cancelSubscription(userId);
@@ -138,7 +141,7 @@ class AuthController {
     }
   }
 
-  async getSubscriptionStatus(req: Request, res: Response, next: NextFunction) {
+  async getSubscriptionStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId } = req.user;
       const user = await db.user.findUnique({
@@ -167,6 +170,8 @@ class AuthController {
       next(error);
     }
   }
+
+  private stripe: any; // TODO: Add proper Stripe type
 
   async handleStripeWebhook(req: Request, res: Response, next: NextFunction) {
     try {

@@ -1,42 +1,62 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, UsageType } from '@prisma/client';
-import logger from '../minimal/logger';
+import type { AuthRequest } from '../types/auth';
+import { prisma } from '../lib/prisma';
+import { UsageType } from '@prisma/client';
+import UsageTrackingService from '../services/UsageTrackingService';
+import logger from '../utils/logger';
 
-const prisma = new PrismaClient();
-
+/**
+ * Track API usage via response interceptor
+ */
 export const trackUsage = (type: UsageType) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const userId = (req as any).user?.id;
-    
-    if (!userId) {
-      logger.warn('Usage tracking skipped: No user ID found');
-      return next();
-    }
-
     const startTime = Date.now();
-    let originalSend = res.send;
+    const originalSend = res.send;
 
     // Override res.send() to track usage after response is sent
     res.send = function(body: any): Response {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      // Track usage asynchronously
-      prisma.usageRecord.create({
-        data: {
-          userId,
-          type,
-          quantity: 1,
-          metadata: {
+      if (req.user?.userId) {
+        // Track usage asynchronously via service
+        UsageTrackingService.getInstance()
+          .trackUsage(type, 1, {
             duration,
             endpoint: req.path,
             method: req.method,
             statusCode: res.statusCode,
+            userId: req.user.userId,
+          })
+          .catch(error => {
+            logger.error('Failed to track usage:', error);
+          });
+
+        // Update monthly usage counter
+        const now = new Date();
+        const monthKey = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+        
+        prisma.monthlyUsage.upsert({
+          where: {
+            userId_month: {
+              userId: req.user.userId,
+              month: monthKey,
+            },
           },
-        },
-      }).catch(error => {
-        logger.error('Failed to track usage:', error);
-      });
+          update: {
+            count: { increment: 1 },
+            lastUpdated: now,
+          },
+          create: {
+            userId: req.user.userId,
+            month: monthKey,
+            count: 1,
+            lastUpdated: now,
+          },
+        }).catch((error) => {
+          logger.error('Failed to update monthly usage:', error);
+        });
+      }
 
       return originalSend.call(this, body);
     };
@@ -45,30 +65,66 @@ export const trackUsage = (type: UsageType) => {
   };
 };
 
+/**
+ * Track AI token usage
+ */
 export const trackTokenUsage = async (
-  userId: string,
   promptTokens: number,
   completionTokens: number
 ) => {
   try {
-    await Promise.all([
-      prisma.usageRecord.create({
-        data: {
-          userId,
-          type: UsageType.PROMPT_TOKENS,
-          quantity: promptTokens,
-        },
-      }),
-      prisma.usageRecord.create({
-        data: {
-          userId,
-          type: UsageType.COMPLETION_TOKENS,
-          quantity: completionTokens,
-        },
-      }),
-    ]);
+    await UsageTrackingService.getInstance().trackTokenUsage(
+      promptTokens,
+      completionTokens
+    );
   } catch (error) {
     logger.error('Failed to track token usage:', error);
     throw error;
+  }
+};
+
+/**
+ * Check user's usage limits
+ */
+export const checkUsageLimit = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user?.userId) {
+      return next();
+    }
+
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+
+    const monthlyUsage = await prisma.monthlyUsage.findUnique({
+      where: {
+        userId_month: {
+          userId: req.user.userId,
+          month: monthKey,
+        },
+      },
+    });
+
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: req.user.userId },
+    });
+
+    if (!subscription) {
+      return next();
+    }
+
+    const usageLimit = subscription.usageLimit;
+    const currentUsage = monthlyUsage?.count || 0;
+
+    if (currentUsage >= usageLimit) {
+      return res.status(429).json({
+        error: 'Usage limit exceeded',
+        code: 'USAGE_LIMIT_EXCEEDED',
+        message: 'You have exceeded your monthly usage limit. Please upgrade your plan.',
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
   }
 };

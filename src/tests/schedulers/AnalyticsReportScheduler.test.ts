@@ -15,7 +15,7 @@ describe('AnalyticsReportScheduler', () => {
     jest.clearAllMocks();
 
     // Reset configuration
-    config.analytics.reports = {
+    (config.analytics as any).reports = {
       daily: {
         enabled: true,
         time: '06:00'
@@ -50,8 +50,8 @@ describe('AnalyticsReportScheduler', () => {
     });
 
     it('only starts enabled report jobs', async () => {
-      config.analytics.reports.daily.enabled = false;
-      config.analytics.reports.weekly.enabled = false;
+      ((config.analytics as any).reports.daily as any).enabled = false;
+      ((config.analytics as any).reports.weekly as any).enabled = false;
 
       await AnalyticsReportScheduler.start();
 
@@ -118,7 +118,7 @@ describe('AnalyticsReportScheduler', () => {
     });
 
     it('reflects disabled jobs in status', async () => {
-      config.analytics.reports.daily.enabled = false;
+      ((config.analytics as any).reports.daily as any).enabled = false;
       await AnalyticsReportScheduler.start();
 
       const status = AnalyticsReportScheduler.getStatus();

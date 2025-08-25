@@ -1,0 +1,34 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/routes/auth.ts",
+    "src/routes/billing.ts",
+    "src/routes/subscription.ts",
+    "src/controllers/AuthController.ts",
+    "src/controllers/BillingController.ts",
+    "src/controllers/SubscriptionController.ts",
+    "src/services/AuthService.ts",
+    "src/services/BillingService.ts",
+    "src/services/SubscriptionService.ts",
+    "src/services/StripeService.ts",
+    "src/middleware/auth/**/*.ts",
+    "src/middleware/security/**/*.ts",
+    "src/types/**/*.ts"
+  ],
+  "exclude": [
+    "src/components/**",
+    "src/terminal/**",
+    "src/main/**",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/tests/**"
+  ]
+}

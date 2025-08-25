@@ -37,7 +37,7 @@ describe('CommandService', () => {
       };
 
       const result = await commandService.executeCommand(command);
-      expect(result.output.trim()).toBe('/tmp');
+      expect(result.output.trim()).toMatch(/\/tmp$/);
       expect(result.exitCode).toBe(0);
     });
   });

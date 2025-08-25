@@ -27,4 +27,4 @@ alerting:
           # - 'alertmanager:9093'
 
 rule_files:
-  # - 'alert.rules'
+  - 'alert.rules.yml'

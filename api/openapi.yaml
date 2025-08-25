@@ -1,0 +1,341 @@
+openapi: 3.1.0
+info:
+  title: Rinawarp API
+  version: 1.0.0
+  description: API for the Rinawarp AI-powered terminal platform
+  contact:
+    name: Rinawarp Support
+    email: support@rinawarp.com
+    url: https://rinawarp.com/support
+
+servers:
+  - url: https://api.rinawarp.com/v1
+    description: Production server
+  - url: https://staging-api.rinawarp.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required:
+        - code
+        - message
+
+    TerminalCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          description: The command to execute
+        args:
+          type: array
+          items:
+            type: string
+          description: Command arguments
+        context:
+          type: object
+          description: Additional context for command execution
+      required:
+        - command
+
+    TerminalResponse:
+      type: object
+      properties:
+        output:
+          type: string
+        error:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        exitCode:
+          type: integer
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        preferences:
+          type: object
+        subscription:
+          type: object
+      required:
+        - id
+        - email
+
+paths:
+  /terminal/execute:
+    post:
+      summary: Execute a terminal command
+      description: Executes a command in the AI-powered terminal
+      operationId: executeCommand
+      tags:
+        - Terminal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerminalCommand'
+      responses:
+        '200':
+          description: Command executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminalResponse'
+        '400':
+          description: Invalid command
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Too many requests
+
+  /terminal/suggestions:
+    post:
+      summary: Get command suggestions
+      description: Get AI-powered suggestions for terminal commands
+      operationId: getCommandSuggestions
+      tags:
+        - Terminal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                context:
+                  type: object
+      responses:
+        '200':
+          description: Suggestions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '429':
+          description: Too many requests
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and get access token
+      operationId: loginUser
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Get a new access token using refresh token
+      operationId: refreshToken
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+              required:
+                - refreshToken
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Invalid refresh token
+
+  /user/profile:
+    get:
+      summary: Get user profile
+      description: Retrieve the current user's profile
+      operationId: getUserProfile
+      tags:
+        - User
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+
+    patch:
+      summary: Update user profile
+      description: Update the current user's profile
+      operationId: updateUserProfile
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                preferences:
+                  type: object
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid update data
+        '401':
+          description: Unauthorized
+
+  /subscription/plans:
+    get:
+      summary: Get available subscription plans
+      description: Retrieve list of available subscription plans
+      operationId: getSubscriptionPlans
+      tags:
+        - Subscription
+      responses:
+        '200':
+          description: Plans retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    price:
+                      type: number
+                    features:
+                      type: array
+                      items:
+                        type: string
+        '401':
+          description: Unauthorized
+
+  /subscription/subscribe:
+    post:
+      summary: Subscribe to a plan
+      description: Subscribe user to a specific plan
+      operationId: subscribeToPlan
+      tags:
+        - Subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                planId:
+                  type: string
+                paymentMethodId:
+                  type: string
+              required:
+                - planId
+                - paymentMethodId
+      responses:
+        '200':
+          description: Subscription successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptionId:
+                    type: string
+                  status:
+                    type: string
+        '400':
+          description: Invalid subscription data
+        '401':
+          description: Unauthorized
+        '402':
+          description: Payment required

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthPayload } from '../types/auth';
+import type { AuthPayload, UserStatus, SubscriptionPlan } from '../types/auth';
 import { AppError } from './errorHandler';
 import db from '../utils/db';
 import redis from '../utils/redis';
@@ -52,14 +52,14 @@ export async function authenticate(
       throw new AppError('User not found', 'USER_NOT_FOUND', 404);
     }
 
-    if (user.status !== 'active') {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new AppError('User account is not active', 'INACTIVE_ACCOUNT', 403);
     }
 
     // Add user to request
     req.user = {
       ...payload,
-      plan: user.currentPlan || 'free',
+      plan: user.currentPlan || SubscriptionPlan.FREE,
     };
 
     next();

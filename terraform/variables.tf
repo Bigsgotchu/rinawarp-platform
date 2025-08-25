@@ -5,6 +5,96 @@ variable "project_name" {
 }
 
 variable "environment" {
+  description = "Environment (prod, staging, dev)"
+  type        = string
+  default     = "prod"
+}
+
+variable "aws_region" {
+  description = "AWS region to deploy to"
+  type        = string
+  default     = "us-west-2"
+}
+
+variable "domain_name" {
+  description = "Domain name for the application"
+  type        = string
+  default     = "rinawarp.com"
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.medium"
+}
+
+variable "redis_node_type" {
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t3.medium"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "db_name" {
+  description = "Name of the database"
+  type        = string
+  default     = "rinawarp"
+}
+
+variable "db_username" {
+  description = "Database master username"
+  type        = string
+  default     = "rinawarp_admin"
+}
+
+variable "db_password" {
+  description = "Database master password"
+  type        = string
+  sensitive   = true
+}
+
+variable "container_port" {
+  description = "Port exposed by the docker image"
+  type        = number
+  default     = 3000
+}
+
+variable "container_cpu" {
+  description = "CPU units for the container"
+  type        = number
+  default     = 256
+}
+
+variable "container_memory" {
+  description = "Memory limit for the container"
+  type        = number
+  default     = 512
+}
+
+variable "desired_count" {
+  description = "Number of ECS tasks to run"
+  type        = number
+  default     = 2
+}
+
+variable "health_check_path" {
+  description = "Path for health check"
+  type        = string
+  default     = "/api/health"
+}
+
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+  default     = "rinawarp"
+}
+
+variable "environment" {
   description = "Environment (e.g., prod, staging)"
   type        = string
   default     = "prod"

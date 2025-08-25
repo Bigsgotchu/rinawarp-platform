@@ -1,4 +1,179 @@
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../types/auth';
+import { rateLimit } from 'express-rate-limit';
+import helmet from 'helmet';
+import { AppError } from './errorHandler';
+import logger from '../utils/logger';
+
+// Security headers configuration
+export const securityHeaders = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://js.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+      connectSrc: ["'self'", "https://api.stripe.com"],
+      imgSrc: ["'self'", "https://*.stripe.com", "data:"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+});
+
+// Payment-specific rate limiting
+export const paymentRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 payment requests per windowMs
+  message: 'Too many payment requests from this IP, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Idempotency middleware for payment operations
+export const idempotencyCheck = async (req: Request, res: Response, next: NextFunction) => {
+  const idempotencyKey = req.headers['idempotency-key'];
+
+  if (!idempotencyKey || Array.isArray(idempotencyKey)) {
+    return next(new AppError('Idempotency key required', 'INVALID_REQUEST', 400));
+  }
+
+  try {
+    // Check if operation with this key already exists
+    const existingOperation = await prisma.paymentOperation.findUnique({
+      where: { idempotencyKey },
+    });
+
+    if (existingOperation) {
+      return res.status(200).json(existingOperation.result);
+    }
+
+    // Store the key in request for later use
+    req.idempotencyKey = idempotencyKey;
+    next();
+  } catch (error) {
+    logger.error('Idempotency check failed:', error);
+    next(error);
+  }
+};
+
+// High-value transaction validation
+export const validateHighValueTransaction = async (req: Request, res: Response, next: NextFunction) => {
+  const { amount } = req.body;
+  const HIGH_VALUE_THRESHOLD = 10000; // $100 in cents
+
+  if (amount && amount > HIGH_VALUE_THRESHOLD) {
+    // Additional validation for high-value transactions
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: {
+        paymentHistory: {
+          where: {
+            status: 'PAID',
+            createdAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return next(new AppError('User not found', 'INVALID_USER', 404));
+    }
+
+    // Check user's payment history
+    const hasPaymentHistory = user.paymentHistory.length > 0;
+    const totalSpent = user.paymentHistory.reduce((sum, payment) => sum + payment.amount, 0);
+
+    if (!hasPaymentHistory || totalSpent < HIGH_VALUE_THRESHOLD) {
+      return next(new AppError(
+        'Additional verification required for high-value transactions',
+        'HIGH_VALUE_VERIFICATION_REQUIRED',
+        403
+      ));
+    }
+  }
+
+  next();
+};
+
+// Stripe webhook signature verification
+export const verifyStripeWebhook = (req: Request, res: Response, next: NextFunction) => {
+  const signature = req.headers['stripe-signature'];
+
+  if (!signature || Array.isArray(signature)) {
+    return next(new AppError('Invalid Stripe signature', 'INVALID_SIGNATURE', 400));
+  }
+
+  try {
+    const event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+    req.stripeEvent = event;
+    next();
+  } catch (error) {
+    logger.error('Stripe webhook verification failed:', error);
+    next(new AppError('Invalid Stripe webhook', 'INVALID_WEBHOOK', 400));
+  }
+};
+
+// IP-based fraud detection
+export const fraudDetection = async (req: Request, res: Response, next: NextFunction) => {
+  const clientIP = req.ip;
+  const SUSPICIOUS_THRESHOLD = 5;
+
+  try {
+    // Check recent failed payment attempts from this IP
+    const recentFailures = await prisma.paymentAttempt.count({
+      where: {
+        ipAddress: clientIP,
+        status: 'FAILED',
+        createdAt: {
+          gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
+        },
+      },
+    });
+
+    if (recentFailures >= SUSPICIOUS_THRESHOLD) {
+      logger.warn(`Suspicious payment activity detected from IP: ${clientIP}`);
+      return next(new AppError(
+        'Too many failed payment attempts',
+        'SUSPICIOUS_ACTIVITY',
+        403
+      ));
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Fraud detection check failed:', error);
+    next(error);
+  }
+};
+
+// Payment amount validation
+export const validatePaymentAmount = (req: Request, res: Response, next: NextFunction) => {
+  const { amount } = req.body;
+  const MIN_AMOUNT = 50; // $0.50 in cents
+  const MAX_AMOUNT = 999999; // $9,999.99 in cents
+
+  if (!amount || amount < MIN_AMOUNT || amount > MAX_AMOUNT) {
+    return next(new AppError(
+      'Invalid payment amount',
+      'INVALID_AMOUNT',
+      400
+    ));
+  }
+
+  next();
+};
+
+import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { AppError } from './errorHandler';

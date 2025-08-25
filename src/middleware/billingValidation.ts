@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import type { AuthRequest } from '../types/auth';
 import { AppError } from './errorHandler';
 import { validateCreditCard } from '../utils/validation';
 
