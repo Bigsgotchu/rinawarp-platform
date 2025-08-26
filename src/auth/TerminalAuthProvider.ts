@@ -1,5 +1,11 @@
-import axios, { AxiosInstance } from 'axios';
-import { WebsiteAPIConfig, AuthResponse, TerminalAuth } from './types';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { ApiResponse } from '../api/types';
+import type { TerminalAuth } from './types';
+
+export interface WebsiteAPIConfig {
+  baseUrl: string;
+  timeout?: number;
+}
 
 export class TerminalAuthProvider {
   private static instance: TerminalAuthProvider;
@@ -8,11 +14,12 @@ export class TerminalAuthProvider {
 
   private constructor(config: WebsiteAPIConfig) {
     this.client = axios.create({
+      // @ts-ignore: Type mismatch with axios.create return type
       baseURL: config.baseUrl,
       timeout: config.timeout,
     });
 
-    this.client.interceptors.request.use((config) => {
+    this.client.interceptors.request.use((config: AxiosRequestConfig) => {
       if (this.auth?.apiKey) {
         config.headers['x-api-key'] = this.auth.apiKey;
       }
@@ -32,16 +39,16 @@ export class TerminalAuthProvider {
 
   public async login(email: string, password: string): Promise<TerminalAuth> {
     try {
-      const response = await this.client.post<AuthResponse>('/terminal/auth/login', {
-        email,
-        password,
-      });
+      const response = await this.client.post<ApiResponse<TerminalAuth>>(
+        '/terminal/auth/login',
+        {
+          email,
+          password,
+        }
+      );
 
-      this.auth = {
-        apiKey: response.data.apiKey,
-        token: response.data.token,
-        user: response.data.user,
-      };
+      const auth = response.data.data;
+      this.auth = auth;
 
       return this.auth;
     } catch (error) {
