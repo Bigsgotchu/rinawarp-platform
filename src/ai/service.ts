@@ -64,7 +64,7 @@ export class AIService extends EventEmitter {
       };
 
       // Send request to API
-const response = await TerminalApiClient.getInstance().post<AIResponse>(
+      const response = await TerminalApiClient.getInstance().post<AIResponse>(
         '/terminal/ai/chat',
         request
       );
@@ -87,13 +87,12 @@ const response = await TerminalApiClient.getInstance().post<AIResponse>(
     context?: AIContext
   ): Promise<AISuggestion[]> {
     try {
-const response = await TerminalApiClient.getInstance().post<AISuggestion[]>(
-        '/terminal/ai/suggest',
-        {
-          input,
-          context: context || this.context,
-        }
-      );
+      const response = await TerminalApiClient.getInstance().post<
+        AISuggestion[]
+      >('/terminal/ai/suggest', {
+        input,
+        context: context || this.context,
+      });
 
       // Track suggestions
       AnalyticsService.trackEvent('ai.suggestions', {
@@ -108,12 +107,9 @@ const response = await TerminalApiClient.getInstance().post<AISuggestion[]>(
     }
   }
 
-  public async getHelp(
-    command: string,
-    context?: AIContext
-  ): Promise<AIHelp> {
+  public async getHelp(command: string, context?: AIContext): Promise<AIHelp> {
     try {
-const response = await TerminalApiClient.getInstance().post<AIHelp>(
+      const response = await TerminalApiClient.getInstance().post<AIHelp>(
         '/terminal/ai/help',
         {
           command,
@@ -138,7 +134,7 @@ const response = await TerminalApiClient.getInstance().post<AIHelp>(
     context?: AIContext
   ): Promise<AICompletion> {
     try {
-const response = await TerminalApiClient.getInstance().post<AICompletion>(
+      const response = await TerminalApiClient.getInstance().post<AICompletion>(
         '/terminal/ai/complete',
         {
           input,

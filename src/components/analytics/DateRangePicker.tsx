@@ -6,7 +6,7 @@ import {
   Popover,
   TextField,
   Stack,
-  Typography
+  Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
@@ -21,7 +21,7 @@ interface DateRangePickerProps {
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
   startDate,
   endDate,
-  onChange
+  onChange,
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [tempStartDate, setTempStartDate] = useState<Date>(startDate);
@@ -38,7 +38,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const handleApply = () => {
     onChange({
       startDate: startOfDay(tempStartDate),
-      endDate: endOfDay(tempEndDate)
+      endDate: endOfDay(tempEndDate),
     });
     handleClose();
   };
@@ -85,9 +85,15 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 Quick Select
               </Typography>
               <ButtonGroup size="small" fullWidth>
-                <Button onClick={() => handleQuickSelect(7)}>Last 7 Days</Button>
-                <Button onClick={() => handleQuickSelect(30)}>Last 30 Days</Button>
-                <Button onClick={() => handleQuickSelect(90)}>Last 90 Days</Button>
+                <Button onClick={() => handleQuickSelect(7)}>
+                  Last 7 Days
+                </Button>
+                <Button onClick={() => handleQuickSelect(30)}>
+                  Last 30 Days
+                </Button>
+                <Button onClick={() => handleQuickSelect(90)}>
+                  Last 90 Days
+                </Button>
               </ButtonGroup>
             </Box>
 
@@ -100,37 +106,33 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 <DatePicker
                   label="Start Date"
                   value={tempStartDate}
-                  onChange={(date) => date && setTempStartDate(date)}
+                  onChange={date => date && setTempStartDate(date)}
                   maxDate={tempEndDate}
                   slotProps={{
                     textField: {
                       size: 'small',
-                      fullWidth: true
-                    }
+                      fullWidth: true,
+                    },
                   }}
                 />
                 <DatePicker
                   label="End Date"
                   value={tempEndDate}
-                  onChange={(date) => date && setTempEndDate(date)}
+                  onChange={date => date && setTempEndDate(date)}
                   minDate={tempStartDate}
                   maxDate={new Date()}
                   slotProps={{
                     textField: {
                       size: 'small',
-                      fullWidth: true
-                    }
+                      fullWidth: true,
+                    },
                   }}
                 />
               </Stack>
             </Box>
 
             {/* Apply button */}
-            <Button
-              variant="contained"
-              onClick={handleApply}
-              fullWidth
-            >
+            <Button variant="contained" onClick={handleApply} fullWidth>
               Apply Range
             </Button>
           </Stack>

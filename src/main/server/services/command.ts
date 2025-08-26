@@ -147,17 +147,18 @@ export class CommandService {
 
       // Update stats
       stats.totalCommands++;
-      stats.averageDuration = (
+      stats.averageDuration =
         (stats.averageDuration * (stats.totalCommands - 1) + details.duration) /
-        stats.totalCommands
-      );
-      stats.successRate = (
-        (stats.successRate * (stats.totalCommands - 1) + (details.exitCode === 0 ? 1 : 0)) /
-        stats.totalCommands
-      );
+        stats.totalCommands;
+      stats.successRate =
+        (stats.successRate * (stats.totalCommands - 1) +
+          (details.exitCode === 0 ? 1 : 0)) /
+        stats.totalCommands;
 
       // Update common commands
-      const commandEntry = stats.commonCommands.find(c => c.command === command);
+      const commandEntry = stats.commonCommands.find(
+        c => c.command === command
+      );
       if (commandEntry) {
         commandEntry.count++;
       } else {
@@ -189,17 +190,18 @@ export class CommandService {
 
       // Update stats
       stats.totalCommands++;
-      stats.averageDuration = (
+      stats.averageDuration =
         (stats.averageDuration * (stats.totalCommands - 1) + details.duration) /
-        stats.totalCommands
-      );
-      stats.successRate = (
-        (stats.successRate * (stats.totalCommands - 1) + (details.exitCode === 0 ? 1 : 0)) /
-        stats.totalCommands
-      );
+        stats.totalCommands;
+      stats.successRate =
+        (stats.successRate * (stats.totalCommands - 1) +
+          (details.exitCode === 0 ? 1 : 0)) /
+        stats.totalCommands;
 
       // Update common commands
-      const commandEntry = stats.commonCommands.find(c => c.command === command);
+      const commandEntry = stats.commonCommands.find(
+        c => c.command === command
+      );
       if (commandEntry) {
         commandEntry.count++;
       } else {
@@ -309,9 +311,7 @@ export class CommandService {
   /**
    * Parse command
    */
-  public parseCommand(
-    command: string
-  ): {
+  public parseCommand(command: string): {
     command: string;
     args: string[];
     options: Record<string, string>;

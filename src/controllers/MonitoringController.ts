@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { MonitoringService } from '../services/MonitoringService';
+import { MonitoringService } from '../services/command';
 import logger from '../utils/logger';
 
 class MonitoringController {

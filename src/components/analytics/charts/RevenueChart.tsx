@@ -9,7 +9,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Area
+  Area,
 } from 'recharts';
 import { format } from 'date-fns';
 import { Box, Typography, useTheme } from '@mui/material';
@@ -56,7 +56,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data, loading }) => {
             border: 1,
             borderColor: 'divider',
             borderRadius: 1,
-            boxShadow: 1
+            boxShadow: 1,
           }}
         >
           <Typography variant="subtitle2" gutterBottom>
@@ -70,7 +70,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data, loading }) => {
                   color: entry.color,
                   display: 'flex',
                   justifyContent: 'space-between',
-                  gap: 2
+                  gap: 2,
                 }}
               >
                 <span>{entry.name}:</span>
@@ -108,7 +108,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data, loading }) => {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          
+
           {/* Net Revenue Line */}
           <Line
             type="monotone"

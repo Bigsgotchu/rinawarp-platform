@@ -1,9 +1,12 @@
 import express from 'express';
-import ErrorPatternService from '../services/ErrorPatternService';
-import WorkspaceContextService from '../services/WorkspaceContextService';
-import SystemMonitorService from '../services/SystemMonitorService';
-import HistoryService from '../services/HistoryService';
-import { validateErrorAnalysis, validateRecoveryAttempt } from '../middleware/errorValidation';
+import ErrorPatternService from '../services/command';
+import WorkspaceContextService from '../services/command';
+import SystemMonitorService from '../services/command';
+import HistoryService from '../services/command';
+import {
+  validateErrorAnalysis,
+  validateRecoveryAttempt,
+} from '../middleware/errorValidation';
 import { AppError } from '../middleware/errorHandler';
 import logger from '../utils/logger';
 
@@ -41,15 +44,12 @@ router.post('/analyze', validateErrorAnalysis, async (req, res, next) => {
     const { command, error, workspacePath } = req.body;
     const systemState = await SystemMonitorService.getCurrentMetrics();
 
-    const analysis = await ErrorPatternService.analyzeError(
-      command,
-      error,
-      {
-        recentCommands: (await HistoryService.getHistory(5)).map(h => h.command),
-        projectContext: await WorkspaceContextService.getWorkspaceContext(workspacePath),
-        systemState
-      }
-    );
+    const analysis = await ErrorPatternService.analyzeError(command, error, {
+      recentCommands: (await HistoryService.getHistory(5)).map(h => h.command),
+      projectContext:
+        await WorkspaceContextService.getWorkspaceContext(workspacePath),
+      systemState,
+    });
 
     res.json(analysis);
   } catch (error) {
@@ -151,7 +151,11 @@ router.get('/patterns', async (req, res, next) => {
     const { command, error } = req.query;
 
     if (!command || !error) {
-      throw new AppError('Command and error are required', 'INVALID_INPUT', 400);
+      throw new AppError(
+        'Command and error are required',
+        'INVALID_INPUT',
+        400
+      );
     }
 
     const patterns = await ErrorPatternService.findSimilarErrors(

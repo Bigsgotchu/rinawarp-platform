@@ -38,7 +38,8 @@ export function validatePassword(password: string): {
   if (!/[!@#$%^&*]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one special character (!@#$%^&*)',
+      message:
+        'Password must contain at least one special character (!@#$%^&*)',
     };
   }
 
@@ -66,7 +67,8 @@ export function validateUsername(username: string): {
   if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
     return {
       isValid: false,
-      message: 'Username can only contain letters, numbers, underscores, and hyphens',
+      message:
+        'Username can only contain letters, numbers, underscores, and hyphens',
     };
   }
 
@@ -85,7 +87,7 @@ export function validateURL(url: string): boolean {
 export function sanitizeInput(input: string): string {
   // Remove any HTML tags
   input = input.replace(/<[^>]*>?/gm, '');
-  
+
   // Convert special characters to HTML entities
   input = input
     .replace(/&/g, '&amp;')
@@ -93,7 +95,7 @@ export function sanitizeInput(input: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-  
+
   return input;
 }
 
@@ -132,28 +134,28 @@ export function validateIPAddress(ip: string): boolean {
 export function validateCreditCard(number: string): boolean {
   // Remove spaces and dashes
   number = number.replace(/[\s-]/g, '');
-  
+
   // Check if contains only digits
   if (!/^\d+$/.test(number)) return false;
-  
+
   // Luhn algorithm (mod 10)
   let sum = 0;
   let isEven = false;
-  
+
   for (let i = number.length - 1; i >= 0; i--) {
     let digit = parseInt(number[i]);
-    
+
     if (isEven) {
       digit *= 2;
       if (digit > 9) {
         digit -= 9;
       }
     }
-    
+
     sum += digit;
     isEven = !isEven;
   }
-  
+
   return sum % 10 === 0;
 }
 
@@ -164,7 +166,7 @@ export function validateStrongPassword(password: string): {
 } {
   let score = 0;
   const minLength = 8;
-  
+
   if (password.length < minLength) {
     return {
       isValid: false,
@@ -172,33 +174,34 @@ export function validateStrongPassword(password: string): {
       message: `Password must be at least ${minLength} characters long`,
     };
   }
-  
+
   // Award points for length
   score += Math.min(2, Math.floor(password.length / 8));
-  
+
   // Award points for complexity
   if (/[A-Z]/.test(password)) score++;
   if (/[a-z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[!@#$%^&*]/.test(password)) score += 2;
-  
+
   // Award points for mixing characters
   if (/[A-Z].*[0-9]|[0-9].*[A-Z]/.test(password)) score++;
   if (/[!@#$%^&*].*[0-9]|[0-9].*[!@#$%^&*]/.test(password)) score++;
-  
+
   let strength: 'weak' | 'medium' | 'strong';
   let isValid = true;
   let message;
-  
+
   if (score < 4) {
     strength = 'weak';
     isValid = false;
-    message = 'Password is too weak. Add numbers, special characters, and mixed case letters.';
+    message =
+      'Password is too weak. Add numbers, special characters, and mixed case letters.';
   } else if (score < 6) {
     strength = 'medium';
   } else {
     strength = 'strong';
   }
-  
+
   return { isValid, strength, message };
 }

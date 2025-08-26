@@ -11,7 +11,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Sector
+  Sector,
 } from 'recharts';
 import {
   Box,
@@ -19,7 +19,7 @@ import {
   useTheme,
   ToggleButtonGroup,
   ToggleButton,
-  Grid
+  Grid,
 } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -64,13 +64,19 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
     );
   }
 
-  const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: ViewType) => {
+  const handleViewChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newView: ViewType
+  ) => {
     if (newView !== null) {
       setView(newView);
     }
   };
 
-  const handleMetricChange = (event: React.MouseEvent<HTMLElement>, newMetric: MetricType) => {
+  const handleMetricChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newMetric: MetricType
+  ) => {
     if (newMetric !== null) {
       setMetric(newMetric);
     }
@@ -84,7 +90,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
     theme.palette.primary.main,
     theme.palette.secondary.main,
     theme.palette.success.main,
-    theme.palette.warning.main
+    theme.palette.warning.main,
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -97,7 +103,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
             border: 1,
             borderColor: 'divider',
             borderRadius: 1,
-            boxShadow: 1
+            boxShadow: 1,
           }}
         >
           <Typography variant="subtitle2" gutterBottom>
@@ -113,7 +119,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
                   color: entry.color,
                   display: 'flex',
                   justifyContent: 'space-between',
-                  gap: 2
+                  gap: 2,
                 }}
               >
                 <span>{entry.name}:</span>
@@ -137,15 +143,27 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
       endAngle,
       fill,
       payload,
-      value
+      value,
     } = props;
 
     return (
       <g>
-        <text x={cx} y={cy - 5} dy={8} textAnchor="middle" fill={theme.palette.text.primary}>
+        <text
+          x={cx}
+          y={cy - 5}
+          dy={8}
+          textAnchor="middle"
+          fill={theme.palette.text.primary}
+        >
           {payload.plan}
         </text>
-        <text x={cx} y={cy + 15} dy={8} textAnchor="middle" fill={theme.palette.text.secondary}>
+        <text
+          x={cx}
+          y={cy + 15}
+          dy={8}
+          textAnchor="middle"
+          fill={theme.palette.text.secondary}
+        >
           {formatNumber(value)}
         </text>
         <Sector
@@ -185,9 +203,14 @@ const UsageChart: React.FC<UsageChartProps> = ({ data, loading }) => {
         <XAxis
           dataKey="date"
           tick={{ fill: theme.palette.text.secondary }}
-          tickFormatter={(date) => formatDistanceToNow(new Date(date), { addSuffix: true })}
+          tickFormatter={date =>
+            formatDistanceToNow(new Date(date), { addSuffix: true })
+          }
         />
-        <YAxis tick={{ fill: theme.palette.text.secondary }} tickFormatter={formatNumber} />
+        <YAxis
+          tick={{ fill: theme.palette.text.secondary }}
+          tickFormatter={formatNumber}
+        />
         <Tooltip content={<CustomTooltip />} />
         <Legend />
         <Bar

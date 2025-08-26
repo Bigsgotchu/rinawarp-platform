@@ -15,13 +15,13 @@ router.get('/suggest', authenticate, async (req: AuthRequest, res) => {
 
     if (!command || !cwd) {
       res.status(400).json({
-        error: 'Command and current directory are required'
+        error: 'Command and current directory are required',
       });
       return;
     }
 
     const context = {
-      previousCommands: [],  // TODO: Get from history
+      previousCommands: [], // TODO: Get from history
       currentDirectory: cwd as string,
     };
 
@@ -34,7 +34,7 @@ router.get('/suggest', authenticate, async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error('Failed to get suggestions:', error);
     res.status(500).json({
-      error: 'Failed to get suggestions'
+      error: 'Failed to get suggestions',
     });
   }
 });
@@ -48,26 +48,23 @@ router.get('/help', authenticate, async (req: AuthRequest, res) => {
 
     if (!command) {
       res.status(400).json({
-        error: 'Command is required'
+        error: 'Command is required',
       });
       return;
     }
 
     const context = {
-      previousCommands: [],  // TODO: Get from history
+      previousCommands: [], // TODO: Get from history
       currentDirectory: process.cwd(),
     };
 
-    const help = await aiService.getCommandHelp(
-      command as string,
-      context
-    );
+    const help = await aiService.getCommandHelp(command as string, context);
 
     res.json({ help });
   } catch (error) {
     logger.error('Failed to get help:', error);
     res.status(500).json({
-      error: 'Failed to get help'
+      error: 'Failed to get help',
     });
   }
 });
@@ -81,7 +78,7 @@ router.post('/complete', authenticate, async (req: AuthRequest, res) => {
 
     if (!code || !language || !cursor) {
       res.status(400).json({
-        error: 'Code, language, and cursor position are required'
+        error: 'Code, language, and cursor position are required',
       });
       return;
     }
@@ -97,7 +94,7 @@ router.post('/complete', authenticate, async (req: AuthRequest, res) => {
   } catch (error) {
     logger.error('Failed to complete code:', error);
     res.status(500).json({
-      error: 'Failed to complete code'
+      error: 'Failed to complete code',
     });
   }
 });
@@ -111,26 +108,23 @@ router.post('/process', authenticate, async (req: AuthRequest, res) => {
 
     if (!text || !cwd) {
       res.status(400).json({
-        error: 'Text and current directory are required'
+        error: 'Text and current directory are required',
       });
       return;
     }
 
     const context = {
-      previousCommands: [],  // TODO: Get from history
+      previousCommands: [], // TODO: Get from history
       currentDirectory: cwd,
     };
 
-    const result = await aiService.processNaturalLanguage(
-      text,
-      context
-    );
+    const result = await aiService.processNaturalLanguage(text, context);
 
     res.json({ result });
   } catch (error) {
     logger.error('Failed to process text:', error);
     res.status(500).json({
-      error: 'Failed to process text'
+      error: 'Failed to process text',
     });
   }
 });
@@ -144,22 +138,18 @@ router.post('/explain', authenticate, async (req: AuthRequest, res) => {
 
     if (!command || !output) {
       res.status(400).json({
-        error: 'Command and output are required'
+        error: 'Command and output are required',
       });
       return;
     }
 
-    const explanation = await aiService.explainOutput(
-      command,
-      output,
-      error
-    );
+    const explanation = await aiService.explainOutput(command, output, error);
 
     res.json({ explanation });
   } catch (error) {
     logger.error('Failed to explain output:', error);
     res.status(500).json({
-      error: 'Failed to explain output'
+      error: 'Failed to explain output',
     });
   }
 });
@@ -170,19 +160,18 @@ router.post('/explain', authenticate, async (req: AuthRequest, res) => {
 router.get('/recommendations', authenticate, async (req: AuthRequest, res) => {
   try {
     const context = {
-      previousCommands: [],  // TODO: Get from history
+      previousCommands: [], // TODO: Get from history
       currentDirectory: process.cwd(),
     };
 
-    const recommendations = await aiService.getEnvironmentRecommendations(
-      context
-    );
+    const recommendations =
+      await aiService.getEnvironmentRecommendations(context);
 
     res.json({ recommendations });
   } catch (error) {
     logger.error('Failed to get recommendations:', error);
     res.status(500).json({
-      error: 'Failed to get recommendations'
+      error: 'Failed to get recommendations',
     });
   }
 });
@@ -196,26 +185,23 @@ router.post('/solutions', authenticate, async (req: AuthRequest, res) => {
 
     if (!error || !cwd) {
       res.status(400).json({
-        error: 'Error message and current directory are required'
+        error: 'Error message and current directory are required',
       });
       return;
     }
 
     const context = {
-      previousCommands: [],  // TODO: Get from history
+      previousCommands: [], // TODO: Get from history
       currentDirectory: cwd,
     };
 
-    const solutions = await aiService.getSolutionSuggestions(
-      error,
-      context
-    );
+    const solutions = await aiService.getSolutionSuggestions(error, context);
 
     res.json({ solutions });
   } catch (error) {
     logger.error('Failed to get solutions:', error);
     res.status(500).json({
-      error: 'Failed to get solutions'
+      error: 'Failed to get solutions',
     });
   }
 });

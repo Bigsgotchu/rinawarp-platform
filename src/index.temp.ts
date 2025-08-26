@@ -5,7 +5,7 @@ import winston from 'winston';
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.simple(),
-  transports: [new winston.transports.Console()]
+  transports: [new winston.transports.Console()],
 });
 
 // Initialize Express
@@ -18,13 +18,20 @@ app.get('/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error('Error:', err);
-  res.status(500).json({
-    status: 'error',
-    message: 'Internal server error'
-  });
-});
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    logger.error('Error:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+    });
+  }
+);
 
 // Start server
 app.listen(port, () => {

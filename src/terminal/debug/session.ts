@@ -151,7 +151,6 @@ export class DebugSession extends EventEmitter {
       const solutions = await this.getSolutions();
       this.solutions = solutions;
       this.emit('solutions', solutions);
-
     } catch (error) {
       logger.error('Failed to start debug session:', error);
       this.emit('error', error);
@@ -181,7 +180,6 @@ export class DebugSession extends EventEmitter {
 
       this.addStep(debugStep);
       return debugStep;
-
     } catch (error) {
       const failedStep: DebugStep = {
         id: `step_${this.steps.length + 1}`,
@@ -288,15 +286,17 @@ export class DebugSession extends EventEmitter {
       const { arguments: args } = response.message.functionCall;
       const parsedArgs = JSON.parse(args);
 
-      return [{
-        description: parsedArgs.description,
-        steps: parsedArgs.steps,
-        code: parsedArgs.code,
-        confidence: parsedArgs.confidence,
-        metadata: {
-          type: 'ai_suggested',
+      return [
+        {
+          description: parsedArgs.description,
+          steps: parsedArgs.steps,
+          code: parsedArgs.code,
+          confidence: parsedArgs.confidence,
+          metadata: {
+            type: 'ai_suggested',
+          },
         },
-      }];
+      ];
     }
 
     return [];

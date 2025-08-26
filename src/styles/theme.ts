@@ -1,8 +1,8 @@
 export const theme = {
   colors: {
-    primary: '#00CED1',    // Dark Turquoise
-    secondary: '#48D1CC',  // Medium Turquoise
-    accent: '#40E0D0',     // Turquoise
+    primary: '#00CED1', // Dark Turquoise
+    secondary: '#48D1CC', // Medium Turquoise
+    accent: '#40E0D0', // Turquoise
     lightBlue1: '#E0FFFF', // Light Cyan
     lightBlue2: '#B0E0E6', // Powder Blue
     background: '#FFFFFF',
@@ -11,7 +11,8 @@ export const theme = {
   },
   fonts: {
     body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-    heading: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    heading:
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
   },
   spacing: {
     xs: '0.25rem',

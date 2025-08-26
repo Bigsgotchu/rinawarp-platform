@@ -1,4 +1,12 @@
 export interface EnvConfig {
+// Redis Configuration
+  REDIS_HOST?: string;
+  REDIS_PORT?: number;
+  REDIS_PREFIX?: string;
+  REDIS_HOST: string;
+  REDIS_PORT: number;
+  REDIS_PASSWORD?: string;
+  REDIS_PREFIX: string;
   // Server settings
   NODE_ENV: string;
   PORT: number;

@@ -5,7 +5,10 @@
 
 import { HelmetOptions } from 'helmet';
 import { CorsOptions } from 'cors';
-import { RateLimitRequestHandler, Options as RateLimitOptions } from 'express-rate-limit';
+import {
+  RateLimitRequestHandler,
+  Options as RateLimitOptions,
+} from 'express-rate-limit';
 // Removed unused imports
 
 // Helmet configuration
@@ -53,14 +56,21 @@ export const corsConfig: CorsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-CSRF-Token',
+  ],
   exposedHeaders: ['X-CSRF-Token'],
   credentials: true,
   maxAge: 86400, // 24 hours
 };
 
 // Rate limiting configuration
-export const createRateLimiter = (options?: Partial<RateLimitOptions>): RateLimitRequestHandler => {
+export const createRateLimiter = (
+  options?: Partial<RateLimitOptions>
+): RateLimitRequestHandler => {
   const defaultOptions: RateLimitOptions = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
@@ -70,10 +80,10 @@ export const createRateLimiter = (options?: Partial<RateLimitOptions>): RateLimi
     skipSuccessfulRequests: false,
     skipFailedRequests: false,
     requestWasSuccessful: (req, res) => res.statusCode < 400,
-    skip: (req) => false, // Can be customized to skip certain requests
-    keyGenerator: (req) => {
+    skip: req => false, // Can be customized to skip certain requests
+    keyGenerator: req => {
       // Use X-Forwarded-For header if behind proxy, otherwise use IP
-      return req.headers['x-forwarded-for'] as string || req.ip;
+      return (req.headers['x-forwarded-for'] as string) || req.ip;
     },
   };
 
@@ -102,7 +112,8 @@ export const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+  'Permissions-Policy':
+    'camera=(), microphone=(), geolocation=(), interest-cohort=()',
 };
 
 // IP filtering configuration

@@ -130,10 +130,7 @@ Focus on practical, real-world optimizations that provide measurable benefits.`;
         if (parsedArgs.metrics?.length) {
           output += '\n\nPerformance Metrics:\n';
           output += parsedArgs.metrics
-            .map(
-              (m: any) =>
-                `${m.name}: ${m.value} ${m.unit}`
-            )
+            .map((m: any) => `${m.name}: ${m.value} ${m.unit}`)
             .join('\n');
         }
 
@@ -150,7 +147,7 @@ Focus on practical, real-world optimizations that provide measurable benefits.`;
       case 'suggest_improvements': {
         let output = '## Optimized Version\n\n';
         output += `\`\`\`\n${parsedArgs.optimized}\n\`\`\`\n\n`;
-        
+
         output += '## Improvements\n\n';
         if (parsedArgs.improvements?.length) {
           parsedArgs.improvements.forEach((imp: any, i: number) => {

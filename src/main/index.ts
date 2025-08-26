@@ -5,24 +5,28 @@ import authRoutes from '../routes/auth';
 import errorRoutes from '../routes/errors';
 import billingRoutes from '../routes/billing';
 import portalRoutes from '../routes/portal';
-import WorkflowLearningService from '../services/WorkflowLearningService';
-import ErrorPatternService from '../services/ErrorPatternService';
-import SystemMonitorService from '../services/SystemMonitorService';
-import WorkspaceContextService from '../services/WorkspaceContextService';
-import HistoryService from '../services/HistoryService';
+import WorkflowLearningService from '../services/command';
+import ErrorPatternService from '../services/command';
+import SystemMonitorService from '../services/command';
+import WorkspaceContextService from '../services/command';
+import HistoryService from '../services/command';
 import {
   validateErrorAnalysis,
   validateRecoveryAttempt,
-  validateErrorQuery
+  validateErrorQuery,
 } from '../middleware/errorValidation';
-import CommandController from '../controllers/CommandController';
-import { gitController, dockerController, packageController } from '../controllers/SpecializedCommandController';
+import CommandController from '../controllers/command';
+import {
+  gitController,
+  dockerController,
+  packageController,
+} from '../controllers/command';
 import { errorHandler } from '../middleware/errorHandler';
 import logger from '../utils/logger';
-import { 
+import {
   validateCommand,
   validateHistoryQuery,
-  validateHistorySearch 
+  validateHistorySearch,
 } from '../middleware/validation';
 import {
   validateGitOperation,
@@ -30,13 +34,13 @@ import {
   validatePackageOperation,
   validateAnalysis,
   validateWorkflowOperation,
-  validateProfileOperation
+  validateProfileOperation,
 } from '../middleware/specializedValidation';
 import {
   rateLimiter,
   securityHeaders,
   validateCommandSafety,
-  sanitizeCommand
+  sanitizeCommand,
 } from '../middleware/security';
 import swaggerSpec from '../config/swagger';
 
@@ -72,54 +76,52 @@ app.get('/api/docs.json', (req, res) => {
 });
 
 // Command execution and history endpoints
-app.post('/api/commands', [
-  validateCommand,
-  sanitizeCommand,
-  validateCommandSafety
-], CommandController.executeCommand);
-
-app.get('/api/history', 
-  validateHistoryQuery,
-  CommandController.getHistory
+app.post(
+  '/api/commands',
+  [validateCommand, sanitizeCommand, validateCommandSafety],
+  CommandController.executeCommand
 );
 
-app.get('/api/history/search',
+app.get('/api/history', validateHistoryQuery, CommandController.getHistory);
+
+app.get(
+  '/api/history/search',
   validateHistorySearch,
   CommandController.searchHistory
 );
 
 // Predictive and analysis endpoints
-app.get('/api/commands/predict',
+app.get(
+  '/api/commands/predict',
   validateAnalysis,
   CommandController.predictNextCommands
 );
 
-app.get('/api/commands/workflows',
-  CommandController.detectWorkflow
+app.get('/api/commands/workflows', CommandController.detectWorkflow);
+
+app.post(
+  '/api/commands/analyze',
+  [validateCommand, validateAnalysis],
+  CommandController.analyzeImpact
 );
 
-app.post('/api/commands/analyze', [
-  validateCommand,
-  validateAnalysis
-], CommandController.analyzeImpact);
-
 // Error handling and recovery routes
-app.post('/api/errors/analyze',
+app.post(
+  '/api/errors/analyze',
   validateErrorAnalysis,
   async (req, res, next) => {
     try {
       const { command, error, workspacePath } = req.body;
       const systemState = await SystemMonitorService.getCurrentMetrics();
-      
-      const analysis = await ErrorPatternService.analyzeError(
-        command,
-        error,
-        {
-          recentCommands: (await HistoryService.getHistory(5)).map(h => h.command),
-          projectContext: await WorkspaceContextService.getWorkspaceContext(workspacePath),
-          systemState
-        }
-      );
+
+      const analysis = await ErrorPatternService.analyzeError(command, error, {
+        recentCommands: (await HistoryService.getHistory(5)).map(
+          h => h.command
+        ),
+        projectContext:
+          await WorkspaceContextService.getWorkspaceContext(workspacePath),
+        systemState,
+      });
 
       res.json(analysis);
     } catch (error) {
@@ -128,12 +130,13 @@ app.post('/api/errors/analyze',
   }
 );
 
-app.post('/api/errors/recovery',
+app.post(
+  '/api/errors/recovery',
   validateRecoveryAttempt,
   async (req, res, next) => {
     try {
       const { originalCommand, error, recoveryCommand, success } = req.body;
-      
+
       await ErrorPatternService.recordRecoveryAttempt(
         originalCommand,
         error,
@@ -148,30 +151,22 @@ app.post('/api/errors/recovery',
   }
 );
 
-app.get('/api/errors/stats',
-  async (req, res, next) => {
-    try {
-      const stats = await ErrorPatternService.getErrorStats();
-      res.json(stats);
-    } catch (error) {
-      next(error);
-    }
+app.get('/api/errors/stats', async (req, res, next) => {
+  try {
+    const stats = await ErrorPatternService.getErrorStats();
+    res.json(stats);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // Command completion and workflow detection
-app.get('/api/commands/complete',
-  CommandController.getCompletions
-);
+app.get('/api/commands/complete', CommandController.getCompletions);
 
-app.get('/api/commands/detect-workflows',
-  CommandController.detectWorkflows
-);
+app.get('/api/commands/detect-workflows', CommandController.detectWorkflows);
 
 // Advanced workflow management
-app.post('/api/workflows/record', [
-  validateCommand
-], async (req, res, next) => {
+app.post('/api/workflows/record', [validateCommand], async (req, res, next) => {
   try {
     const { command, result, workspacePath } = req.body;
     await WorkflowLearningService.recordCommand(command, result, workspacePath);
@@ -195,40 +190,42 @@ app.get('/api/workflows/suggest', async (req, res, next) => {
 });
 
 // Specialized command endpoints
-app.post('/api/git/execute',
-  validateGitOperation,
-  gitController.executeGit
-);
+app.post('/api/git/execute', validateGitOperation, gitController.executeGit);
 
-app.post('/api/docker/execute',
+app.post(
+  '/api/docker/execute',
   validateDockerOperation,
   dockerController.executeDocker
 );
 
-app.post('/api/package/execute',
+app.post(
+  '/api/package/execute',
   validatePackageOperation,
   packageController.executePackage
 );
 
 // User profile endpoints
-app.get('/api/profile/:userId/stats',
+app.get(
+  '/api/profile/:userId/stats',
   validateProfileOperation,
   CommandController.getProfile
 );
 
-app.post('/api/workflows', [
-  validateWorkflowOperation
-], CommandController.detectWorkflow);
+app.post(
+  '/api/workflows',
+  [validateWorkflowOperation],
+  CommandController.detectWorkflow
+);
 
 // Rate limits for specific endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100
+  max: 100,
 });
 
 const analysisLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10
+  max: 10,
 });
 
 app.use('/api/commands/analyze', analysisLimiter);

@@ -15,7 +15,7 @@ export default {
       origin: process.env.CORS_ORIGIN?.split(',') || [],
     },
   },
-  
+
   // Production overrides
   security: {
     ...base.security,

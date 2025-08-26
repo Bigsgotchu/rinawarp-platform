@@ -40,7 +40,9 @@ export class TerminalApi {
   }
 
   public async getUser(): Promise<TerminalAuth['user']> {
-    const response = await ApiClient.get<{ user: TerminalAuth['user'] }>('/terminal/user');
+    const response = await ApiClient.get<{ user: TerminalAuth['user'] }>(
+      '/terminal/user'
+    );
     return response.user;
   }
 }

@@ -1,59 +1,34 @@
+import { AuthPayload } from '../types/auth';
+
 export interface TerminalAuth {
-  token: string;
-  refreshToken: string;
   apiKey: string;
-  expiresIn: number;
-  user: {
-    id: string;
-    email: string;
-    name: string | null;
-    subscription: {
-      status: string;
-      planId: string;
-      features: string[];
-    } | null;
-    usageStats: {
-      aiRequestsUsed: number;
-      codebasesIndexed: number;
-      lastResetDate: string;
-    } | null;
-  };
+  userId: string;
 }
 
 export interface UsageData {
-  type: string;
-  quantity: number;
-  metadata?: {
-    duration?: number;
-    endpoint?: string;
-    method?: string;
-    statusCode?: number;
-    [key: string]: any;
-  };
+  requests: number;
+  tokenCount: number;
+  completionTokens: number;
+  promptTokens: number;
 }
 
-export interface ApiResponse<T> {
-  data: T;
-  meta?: {
-    page?: number;
-    limit?: number;
-    total?: number;
-    [key: string]: any;
-  };
+export interface ApiResponse<T = unknown> {
+  data?: T;
+  error?: string;
+  message?: string;
+  statusCode: number;
 }
 
-export interface ErrorResponse {
-  error: string;
-  code: string;
-  meta?: Record<string, any>;
+export interface BaseRequest {
+  auth?: AuthPayload;
+  params?: Record<string, string>;
+  body?: unknown;
+  headers?: Record<string, string>;
 }
 
-export interface FeatureFlag {
-  name: string;
-  enabled: boolean;
-  constraints?: {
-    plan?: string[];
-    usage?: number;
-    [key: string]: any;
-  };
+export interface BaseResponse<T = unknown> {
+  data?: T;
+  error?: string;
+  message?: string;
+  statusCode: number;
 }

@@ -122,7 +122,9 @@ describe('DebugSession', () => {
         .mockResolvedValueOnce(mockSolutionResponse);
 
       await session.start();
-      await expect(session.start()).rejects.toThrow('Debug session already active');
+      await expect(session.start()).rejects.toThrow(
+        'Debug session already active'
+      );
     });
   });
 
@@ -160,7 +162,9 @@ describe('DebugSession', () => {
       const stepListener = jest.fn();
       session.on('step', stepListener);
 
-      await expect(session.executeStep('Test step')).rejects.toThrow('Step error');
+      await expect(session.executeStep('Test step')).rejects.toThrow(
+        'Step error'
+      );
       expect(stepListener).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'Test step',

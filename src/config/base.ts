@@ -42,7 +42,8 @@ export default {
   redis: {
     url: requireEnvVar('REDIS_URL'),
     password: requireEnvVar('REDIS_PASSWORD'),
-    tls: process.env.NODE_ENV === 'production' || process.env.REDIS_TLS === 'true',
+    tls:
+      process.env.NODE_ENV === 'production' || process.env.REDIS_TLS === 'true',
   },
 
   // JWT configuration
@@ -72,7 +73,9 @@ export default {
     smtp: {
       host: requireEnvVar('SMTP_HOST'),
       port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.NODE_ENV === 'production' || process.env.SMTP_SECURE === 'true',
+      secure:
+        process.env.NODE_ENV === 'production' ||
+        process.env.SMTP_SECURE === 'true',
       auth: {
         user: requireEnvVar('SMTP_USER'),
         pass: requireEnvVar('SMTP_PASS'),
@@ -87,14 +90,20 @@ export default {
       environment: process.env.NODE_ENV || 'development',
     },
     logLevel: process.env.LOG_LEVEL || 'info',
-    enableRequestLogging: process.env.NODE_ENV !== 'production' || process.env.ENABLE_REQUEST_LOGGING === 'true',
+    enableRequestLogging:
+      process.env.NODE_ENV !== 'production' ||
+      process.env.ENABLE_REQUEST_LOGGING === 'true',
   },
 
   // Security
   security: {
     bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
-    enableCSRF: process.env.NODE_ENV === 'production' || process.env.ENABLE_CSRF === 'true',
-    trustProxy: process.env.NODE_ENV === 'production' || process.env.TRUST_PROXY === 'true',
+    enableCSRF:
+      process.env.NODE_ENV === 'production' ||
+      process.env.ENABLE_CSRF === 'true',
+    trustProxy:
+      process.env.NODE_ENV === 'production' ||
+      process.env.TRUST_PROXY === 'true',
     cookieSecret: requireEnvVar('COOKIE_SECRET'),
     sessionDuration: parseInt(process.env.SESSION_DURATION || '86400000', 10),
   },

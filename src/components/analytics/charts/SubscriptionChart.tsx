@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Brush
+  Brush,
 } from 'recharts';
 import { format } from 'date-fns';
 import { Box, Typography, useTheme } from '@mui/material';
@@ -25,7 +25,10 @@ interface SubscriptionChartProps {
   loading?: boolean;
 }
 
-const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) => {
+const SubscriptionChart: React.FC<SubscriptionChartProps> = ({
+  data,
+  loading,
+}) => {
   const theme = useTheme();
 
   if (loading) {
@@ -51,7 +54,7 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(value);
   };
 
@@ -65,7 +68,7 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
             border: 1,
             borderColor: 'divider',
             borderRadius: 1,
-            boxShadow: 1
+            boxShadow: 1,
           }}
         >
           <Typography variant="subtitle2" gutterBottom>
@@ -79,7 +82,7 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
                   color: entry.color,
                   display: 'flex',
                   justifyContent: 'space-between',
-                  gap: 2
+                  gap: 2,
                 }}
               >
                 <span>{entry.name}:</span>
@@ -87,8 +90,8 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
                   {entry.name === 'Churn Rate'
                     ? formatPercentage(entry.value)
                     : entry.name.includes('MRR') || entry.name.includes('ARR')
-                    ? formatCurrency(entry.value)
-                    : formatNumber(entry.value)}
+                      ? formatCurrency(entry.value)
+                      : formatNumber(entry.value)}
                 </strong>
               </Typography>
             </Box>
@@ -99,7 +102,10 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
     return null;
   };
 
-  const renderYAxis = (position: 'left' | 'right', formatter: (value: number) => string) => (
+  const renderYAxis = (
+    position: 'left' | 'right',
+    formatter: (value: number) => string
+  ) => (
     <YAxis
       yAxisId={position}
       orientation={position}
@@ -133,7 +139,11 @@ const SubscriptionChart: React.FC<SubscriptionChartProps> = ({ data, loading }) 
 
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Brush dataKey="date" height={30} stroke={theme.palette.primary.main} />
+          <Brush
+            dataKey="date"
+            height={30}
+            stroke={theme.palette.primary.main}
+          />
 
           {/* Subscription metrics */}
           <Line

@@ -60,7 +60,7 @@ export class Command implements CommandHandler {
     if (this.metadata.requiredFeatures?.length) {
       const userFeatures = this.context.user?.subscription?.features || [];
       const missingFeatures = this.metadata.requiredFeatures.filter(
-        (f) => !userFeatures.includes(f)
+        f => !userFeatures.includes(f)
       );
 
       if (missingFeatures.length > 0) {
@@ -78,7 +78,7 @@ Description: ${this.metadata.description}
 Usage: ${this.metadata.usage}
 
 Examples:
-${this.metadata.examples.map((e) => `  ${e}`).join('\n')}
+${this.metadata.examples.map(e => `  ${e}`).join('\n')}
 
 Category: ${this.metadata.category}
 ${this.metadata.requiresAuth ? 'Requires authentication' : ''}
@@ -164,13 +164,13 @@ export class CommandRegistry {
 
   public getCommandsByCategory(category: string): Command[] {
     return this.getCommands().filter(
-      (cmd) => cmd.getMetadata().category === category
+      cmd => cmd.getMetadata().category === category
     );
   }
 
   public getCategories(): string[] {
     return Array.from(
-      new Set(this.getCommands().map((cmd) => cmd.getMetadata().category))
+      new Set(this.getCommands().map(cmd => cmd.getMetadata().category))
     );
   }
 

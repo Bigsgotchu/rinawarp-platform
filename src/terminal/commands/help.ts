@@ -27,16 +27,14 @@ export class HelpCommand extends BaseCommand {
       // Show general help
       const categories = registry.getCategories();
       const output = categories
-        .map((category) => {
+        .map(category => {
           const commands = registry.getCommandsByCategory(category);
           return `
 ${category.toUpperCase()}
 ${commands
   .map(
-    (cmd) =>
-      `  ${cmd.getMetadata().name.padEnd(15)} ${
-        cmd.getMetadata().description
-      }`
+    cmd =>
+      `  ${cmd.getMetadata().name.padEnd(15)} ${cmd.getMetadata().description}`
   )
   .join('\n')}
 `;

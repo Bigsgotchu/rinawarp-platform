@@ -3,9 +3,9 @@ import { CacheService } from '../services/cache';
 import { logger } from '../../utils/logger';
 
 export interface RateLimitConfig {
-  windowMs: number;  // Time window in milliseconds
-  max: number;       // Max number of requests per window
-  message?: string;  // Error message
+  windowMs: number; // Time window in milliseconds
+  max: number; // Max number of requests per window
+  message?: string; // Error message
   statusCode?: number; // HTTP status code for rate limit exceeded
   keyGenerator?: (req: Request) => string; // Function to generate rate limit key
 }
@@ -18,7 +18,7 @@ export class RateLimiter {
     this.cache = new CacheService();
     this.config = {
       windowMs: 60 * 1000, // 1 minute
-      max: 100,           // 100 requests per minute
+      max: 100, // 100 requests per minute
       message: 'Too many requests, please try again later',
       statusCode: 429,
       keyGenerator: (req: Request) => {
@@ -39,10 +39,10 @@ export class RateLimiter {
   ): Promise<void> => {
     try {
       const key = `ratelimit:${this.config.keyGenerator!(req)}`;
-      
+
       // Get current hits
       const hits = await this.getHits(key);
-      
+
       // Check if limit exceeded
       if (hits.total >= this.config.max) {
         res.status(this.config.statusCode!).json({
@@ -70,9 +70,7 @@ export class RateLimiter {
   /**
    * Get current hits for key
    */
-  private async getHits(
-    key: string
-  ): Promise<{
+  private async getHits(key: string): Promise<{
     total: number;
     expires: number;
   }> {

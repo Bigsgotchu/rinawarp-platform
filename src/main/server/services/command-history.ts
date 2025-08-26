@@ -14,13 +14,13 @@ export interface CommandHistoryEntry {
 }
 
 export interface SearchOptions {
-  query?: string;      // Search text
-  directory?: string;  // Specific directory
-  limit?: number;      // Max results
-  offset?: number;     // Pagination offset
-  tags?: string[];     // Filter by tags
-  exitCode?: number;   // Filter by exit code
-  startDate?: Date;    // Filter by date range
+  query?: string; // Search text
+  directory?: string; // Specific directory
+  limit?: number; // Max results
+  offset?: number; // Pagination offset
+  tags?: string[]; // Filter by tags
+  exitCode?: number; // Filter by exit code
+  startDate?: Date; // Filter by date range
   endDate?: Date;
 }
 
@@ -138,12 +138,14 @@ export class CommandHistoryService {
   public async getFrequentCommands(
     userId: string,
     directory?: string
-  ): Promise<Array<{
-    command: string;
-    count: number;
-    avgDuration?: number;
-    successRate: number;
-  }>> {
+  ): Promise<
+    Array<{
+      command: string;
+      count: number;
+      avgDuration?: number;
+      successRate: number;
+    }>
+  > {
     try {
       const cacheKey = `${this.cachePrefix}frequent:${userId}:${directory || 'all'}`;
       const cached = await this.cache.get<any[]>(cacheKey);
@@ -236,10 +238,7 @@ export class CommandHistoryService {
   /**
    * Delete command from history
    */
-  public async deleteCommand(
-    userId: string,
-    commandId: string
-  ): Promise<void> {
+  public async deleteCommand(userId: string, commandId: string): Promise<void> {
     try {
       await db.commandHistory.delete({
         id: commandId,
@@ -288,10 +287,7 @@ export class CommandHistoryService {
   /**
    * Get search cache key
    */
-  private getSearchCacheKey(
-    userId: string,
-    options: SearchOptions
-  ): string {
+  private getSearchCacheKey(userId: string, options: SearchOptions): string {
     return `${this.cachePrefix}search:${userId}:${JSON.stringify(options)}`;
   }
 
@@ -302,7 +298,9 @@ export class CommandHistoryService {
     try {
       const pattern = `${this.cachePrefix}*:${userId}:*`;
       const keys = await this.cache.mdelete([pattern]);
-      logger.debug(`Invalidated ${keys.length} cache entries for user ${userId}`);
+      logger.debug(
+        `Invalidated ${keys.length} cache entries for user ${userId}`
+      );
     } catch (error) {
       logger.error('Failed to invalidate user caches:', error);
     }
@@ -311,9 +309,7 @@ export class CommandHistoryService {
   /**
    * Get history statistics
    */
-  public async getStats(
-    userId: string
-  ): Promise<{
+  public async getStats(userId: string): Promise<{
     totalCommands: number;
     uniqueCommands: number;
     averageDuration: number;

@@ -48,7 +48,6 @@ export function setupApiDocs(app: Express) {
       );
       res.send(YAML.stringify(fullSpec));
     });
-
   } catch (error) {
     console.error('Failed to setup API documentation:', error);
     throw error;

@@ -1,5 +1,5 @@
 import express from 'express';
-import UserController from '../controllers/UserController';
+import UserController from '../controllers/command';
 import { authenticate } from '../middleware/authenticate';
 import { validateUser } from '../middleware/userValidation';
 import { checkRole } from '../middleware/roleCheck';
@@ -18,10 +18,7 @@ const router = express.Router();
  *       200:
  *         description: User profile data
  */
-router.get('/profile',
-  authenticate,
-  UserController.getProfile
-);
+router.get('/profile', authenticate, UserController.getProfile);
 
 /**
  * @swagger
@@ -48,7 +45,8 @@ router.get('/profile',
  *       200:
  *         description: Profile updated successfully
  */
-router.put('/profile',
+router.put(
+  '/profile',
   authenticate,
   validateUser.updateProfile,
   UserController.updateProfile
@@ -66,7 +64,8 @@ router.put('/profile',
  *       204:
  *         description: Account deleted successfully
  */
-router.delete('/account',
+router.delete(
+  '/account',
   authenticate,
   validateUser.deleteAccount,
   UserController.deleteAccount
@@ -91,10 +90,7 @@ router.delete('/account',
  *       200:
  *         description: Usage metrics data
  */
-router.get('/metrics',
-  authenticate,
-  UserController.getUsageMetrics
-);
+router.get('/metrics', authenticate, UserController.getUsageMetrics);
 
 /**
  * @swagger
@@ -119,10 +115,7 @@ router.get('/metrics',
  *       200:
  *         description: Billing history data
  */
-router.get('/billing',
-  authenticate,
-  UserController.getBillingHistory
-);
+router.get('/billing', authenticate, UserController.getBillingHistory);
 
 /**
  * @swagger
@@ -136,7 +129,8 @@ router.get('/billing',
  *       200:
  *         description: Subscription history data
  */
-router.get('/subscriptions',
+router.get(
+  '/subscriptions',
   authenticate,
   UserController.getSubscriptionHistory
 );
@@ -169,7 +163,8 @@ router.get('/subscriptions',
  *       200:
  *         description: Preferences updated successfully
  */
-router.put('/preferences',
+router.put(
+  '/preferences',
   authenticate,
   validateUser.updatePreferences,
   UserController.updatePreferences
@@ -188,11 +183,7 @@ router.put('/preferences',
  *       200:
  *         description: List of all users
  */
-router.get('/',
-  authenticate,
-  checkRole('ADMIN'),
-  UserController.getAllUsers
-);
+router.get('/', authenticate, checkRole('ADMIN'), UserController.getAllUsers);
 
 /**
  * @swagger
@@ -213,7 +204,8 @@ router.get('/',
  *       200:
  *         description: User data
  */
-router.get('/:id',
+router.get(
+  '/:id',
   authenticate,
   checkRole('ADMIN'),
   UserController.getUserById
@@ -250,7 +242,8 @@ router.get('/:id',
  *       200:
  *         description: User status updated
  */
-router.put('/:id/status',
+router.put(
+  '/:id/status',
   authenticate,
   checkRole('ADMIN'),
   validateUser.updateStatus,
@@ -269,7 +262,8 @@ router.put('/:id/status',
  *       200:
  *         description: User statistics data
  */
-router.get('/stats',
+router.get(
+  '/stats',
   authenticate,
   checkRole('ADMIN'),
   UserController.getUserStats

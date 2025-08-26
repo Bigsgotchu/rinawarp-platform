@@ -25,7 +25,7 @@ export class ApiClient {
     });
 
     // Add request interceptor for API key
-    this.client.interceptors.request.use((config) => {
+    this.client.interceptors.request.use(config => {
       if (this.apiKey) {
         config.headers['x-api-key'] = this.apiKey;
       }
@@ -34,7 +34,7 @@ export class ApiClient {
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => response,
+      response => response,
       (error: AxiosError) => {
         if (error.response) {
           const { status, data } = error.response;

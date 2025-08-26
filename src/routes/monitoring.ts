@@ -1,5 +1,5 @@
 import express from 'express';
-import MonitoringController from '../controllers/MonitoringController';
+import MonitoringController from '../controllers/command';
 import { authenticate } from '../middleware/authenticate';
 import { checkRole } from '../middleware/roleCheck';
 
@@ -17,7 +17,8 @@ const router = express.Router();
  *       200:
  *         description: Detailed health status
  */
-router.get('/health',
+router.get(
+  '/health',
   authenticate,
   checkRole(['ADMIN']),
   MonitoringController.getHealth
@@ -33,9 +34,7 @@ router.get('/health',
  *       200:
  *         description: Basic health check response
  */
-router.get('/liveness',
-  MonitoringController.getLiveness
-);
+router.get('/liveness', MonitoringController.getLiveness);
 
 /**
  * @swagger
@@ -49,7 +48,8 @@ router.get('/liveness',
  *       200:
  *         description: System metrics
  */
-router.get('/metrics',
+router.get(
+  '/metrics',
   authenticate,
   checkRole(['ADMIN']),
   MonitoringController.getMetrics

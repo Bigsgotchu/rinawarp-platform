@@ -80,10 +80,9 @@ export class AIService {
         .filter(s => s.startsWith(partialCommand));
 
       // Combine and deduplicate suggestions
-      const suggestions = Array.from(new Set([
-        ...historicalSuggestions,
-        ...aiSuggestions,
-      ])).slice(0, 5); // Limit to top 5
+      const suggestions = Array.from(
+        new Set([...historicalSuggestions, ...aiSuggestions])
+      ).slice(0, 5); // Limit to top 5
 
       // Cache results
       await this.cache.set(cacheKey, suggestions, this.cacheTTL);
@@ -114,7 +113,9 @@ export class AIService {
       const prompt = {
         role: 'user',
         content: `Explain the command "${command}" and provide examples of common usage. ${
-          context.lastError ? `Consider this error context: ${context.lastError}` : ''
+          context.lastError
+            ? `Consider this error context: ${context.lastError}`
+            : ''
         }`,
       };
 
@@ -140,9 +141,7 @@ export class AIService {
   /**
    * Get code completion
    */
-  public async completeCode(
-    context: CodeContext
-  ): Promise<AIModelResponse> {
+  public async completeCode(context: CodeContext): Promise<AIModelResponse> {
     try {
       // Prepare prompt
       const prompt = {
@@ -266,7 +265,7 @@ export class AIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.ai.apiKey}`,
+          Authorization: `Bearer ${config.ai.apiKey}`,
         },
         body: JSON.stringify({
           model: config.ai.modelName,
@@ -282,7 +281,7 @@ export class AIService {
       }
 
       const data = await response.json();
-      
+
       return {
         text: data.choices[0].message.content,
         confidence: data.choices[0].confidence || 1,

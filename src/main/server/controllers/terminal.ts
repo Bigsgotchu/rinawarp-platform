@@ -46,7 +46,7 @@ export class TerminalController {
       });
 
       // Handle errors
-      ws.on('error', (error) => {
+      ws.on('error', error => {
         logger.error('Terminal WebSocket error:', error);
         ws.close(1011, 'Internal error');
       });
@@ -102,9 +102,12 @@ export class TerminalController {
       (ws as any).sessionId = session.id;
 
       // Set up terminal output handling
-      this.terminalService.on(`output:${session.id}`, (output: TerminalOutput) => {
-        this.sendOutput(ws, output);
-      });
+      this.terminalService.on(
+        `output:${session.id}`,
+        (output: TerminalOutput) => {
+          this.sendOutput(ws, output);
+        }
+      );
 
       // Set up terminal exit handling
       this.terminalService.on(`exit:${session.id}`, ({ code }) => {

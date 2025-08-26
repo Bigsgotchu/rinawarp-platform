@@ -22,10 +22,10 @@ export const pricingPlans: PricingPlan[] = [
       '50 AI requests/day',
       'Basic terminal features',
       '3 custom themes',
-      'Community support'
+      'Community support',
     ],
     ctaText: 'Download Free',
-    ctaLink: '/download'
+    ctaLink: '/download',
   },
   {
     id: 'pro',
@@ -39,11 +39,11 @@ export const pricingPlans: PricingPlan[] = [
       'Advanced terminal features',
       'Custom themes',
       'API access',
-      'Private hosting options'
+      'Private hosting options',
     ],
     isPopular: true,
     ctaText: 'Contact Sales',
-    ctaLink: '/contact'
+    ctaLink: '/contact',
   },
   {
     id: 'team',
@@ -57,9 +57,9 @@ export const pricingPlans: PricingPlan[] = [
       'Usage analytics',
       'Custom integrations',
       'SLA guarantee',
-      'Dedicated support'
+      'Dedicated support',
     ],
     ctaText: 'Contact Sales',
-    ctaLink: '/contact'
-  }
+    ctaLink: '/contact',
+  },
 ];

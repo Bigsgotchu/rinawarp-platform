@@ -11,8 +11,13 @@ interface WebhookNotificationParams {
 /**
  * Send a notification to a webhook endpoint
  */
-export async function sendWebhookNotification(params: WebhookNotificationParams): Promise<void> {
-  if (!config.monitoring.alerts.webhook.enabled || !config.monitoring.alerts.webhook.url) {
+export async function sendWebhookNotification(
+  params: WebhookNotificationParams
+): Promise<void> {
+  if (
+    !config.monitoring.alerts.webhook.enabled ||
+    !config.monitoring.alerts.webhook.url
+  ) {
     return;
   }
 
@@ -26,8 +31,8 @@ export async function sendWebhookNotification(params: WebhookNotificationParams)
         title: params.alert.title,
         message: params.alert.message,
         metadata: params.alert.metadata || {},
-        createdAt: params.alert.createdAt
-      }
+        createdAt: params.alert.createdAt,
+      },
     };
 
     // Add signature if configured

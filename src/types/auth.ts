@@ -1,31 +1,28 @@
-import { type PrismaClient } from '@prisma/client';
+import { Request } from 'express';
+import { type User as PrismaUser } from '@prisma/client';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  hashedPassword: string;
-  role: UserRole;
-  status: UserStatus;
-  stripeCustomerId?: string;
-  currentPlan?: SubscriptionPlan;
-  createdAt: Date;
-  updatedAt: Date;
-  lastLoginAt?: Date;
-  preferences?: UserPreferences;
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
 }
 
-export type DB = {
-  prisma: PrismaClient;
-  user: User;
-};
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PENDING = 'PENDING',
+}
 
-export interface AuthPayload {
-  userId: string;
-  email: string;
-  role: UserRole;
-  plan: SubscriptionPlan;
-  name?: string | null;
+export enum SubscriptionPlan {
+  FREE = 'FREE',
+  BASIC = 'BASIC',
+  PRO = 'PRO',
+  ENTERPRISE = 'ENTERPRISE',
+}
+
+// Core session user type that represents the currently logged in user
+export interface SessionUser
+  extends Pick<PrismaUser, 'id' | 'email' | 'name' | 'role'> {
   subscription?: {
     status: string;
     planId: string;
@@ -33,18 +30,36 @@ export interface AuthPayload {
   } | null;
 }
 
-export interface AuthRequest extends Request {
-  user: AuthPayload;
+// Extended user type that includes full Prisma User fields plus custom fields
+export interface User extends PrismaUser {
+  status: UserStatus;
+  currentPlan?: SubscriptionPlan;
+  lastLoginAt?: Date;
+  preferences?: UserPreferences;
 }
 
+// Auth token payload structure
+export interface AuthPayload {
+  userId: string;
+  email: string;
+  name: string | null;
+  role: UserRole;
+  plan: SubscriptionPlan;
+  subscription?: {
+    status: string;
+    planId: string;
+    features: string[];
+  } | null;
+}
+
+// Request type with authenticated user
+export interface AuthRequest extends Request {
+  user?: AuthPayload;
+}
+
+// Auth API response structure
 export interface AuthResponse {
-  user: {
-    id: string;
-    email: string;
-    name: string | null;
-    role: UserRole;
-    plan: SubscriptionPlan;
-  };
+  user: SessionUser;
   tokens: {
     accessToken: string;
     refreshToken: string;
@@ -53,24 +68,7 @@ export interface AuthResponse {
   sessionId?: string;
 }
 
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-}
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-}
-
-export enum SubscriptionPlan {
-  FREE = 'free',
-  BASIC = 'basic',
-  PRO = 'pro',
-  ENTERPRISE = 'enterprise',
-}
-
+// User preferences
 export interface UserPreferences {
   emailNotifications: boolean;
   theme: 'light' | 'dark';
@@ -78,6 +76,7 @@ export interface UserPreferences {
   aiAssistance: boolean;
 }
 
+// Authentication types
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -98,6 +97,7 @@ export interface PasswordResetToken {
   expiresAt: Date;
 }
 
+// Session management
 export interface UserSession {
   id: string;
   userId: string;
@@ -112,6 +112,10 @@ export interface UserSession {
   lastActiveAt: Date;
 }
 
+// Subscription plan features
+// Plan management types
+export type PlanKey = keyof typeof SubscriptionPlan;
+
 export interface PlanFeatures {
   maxCommands: number;
   maxWorkflows: number;
@@ -119,6 +123,28 @@ export interface PlanFeatures {
   customWorkflows: boolean;
   teamMembers: number;
   priority: boolean;
+}
+
+export interface SubscriptionStatus {
+  active: boolean;
+  endsAt?: Date;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: Date;
+}
+
+export interface BillingDetails {
+  customerId: string;
+  subscriptionId?: string;
+  plan?: SubscriptionPlan;
+  status?: SubscriptionStatus;
+  paymentMethods?: Array<{
+    id: string;
+    brand: string;
+    last4: string;
+    expMonth: number;
+    expYear: number;
+    isDefault: boolean;
+  }>;
 }
 
 export const PLAN_FEATURES: Record<SubscriptionPlan, PlanFeatures> = {

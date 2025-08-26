@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography, Paper, Grid } from '@mui/material';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { fetchAnalyticsReport, fetchSubscriptionPreferences } from '../../api/analytics';
+import {
+  fetchAnalyticsReport,
+  fetchSubscriptionPreferences,
+} from '../../api/analytics';
 import RevenueMetrics from './RevenueMetrics';
 import SubscriptionMetrics from './SubscriptionMetrics';
 import UsageMetrics from './UsageMetrics';
@@ -14,7 +17,7 @@ import ErrorAlert from '../common/ErrorAlert';
 const AnalyticsDashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-    endDate: new Date()
+    endDate: new Date(),
   });
 
   // Fetch analytics data
@@ -22,12 +25,12 @@ const AnalyticsDashboard: React.FC = () => {
     data: analyticsData,
     isLoading: isLoadingAnalytics,
     error: analyticsError,
-    refetch: refetchAnalytics
+    refetch: refetchAnalytics,
   } = useQuery(
     ['analytics', dateRange],
     () => fetchAnalyticsReport(dateRange.startDate, dateRange.endDate),
     {
-      refetchInterval: 5 * 60 * 1000 // Refresh every 5 minutes
+      refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     }
   );
 
@@ -35,11 +38,14 @@ const AnalyticsDashboard: React.FC = () => {
   const {
     data: preferences,
     isLoading: isLoadingPreferences,
-    error: preferencesError
+    error: preferencesError,
   } = useQuery(['subscriptionPreferences'], fetchSubscriptionPreferences);
 
   // Handle date range changes
-  const handleDateRangeChange = (newRange: { startDate: Date; endDate: Date }) => {
+  const handleDateRangeChange = (newRange: {
+    startDate: Date;
+    endDate: Date;
+  }) => {
     setDateRange(newRange);
   };
 
@@ -62,7 +68,14 @@ const AnalyticsDashboard: React.FC = () => {
         <Grid container spacing={3}>
           {/* Header */}
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3,
+              }}
+            >
               <Typography variant="h4" component="h1">
                 Analytics Dashboard
               </Typography>
@@ -77,9 +90,7 @@ const AnalyticsDashboard: React.FC = () => {
           {/* Email Preferences */}
           <Grid item xs={12}>
             <Paper sx={{ p: 3, mb: 3 }}>
-              <EmailPreferences
-                preferences={preferences}
-              />
+              <EmailPreferences preferences={preferences} />
             </Paper>
           </Grid>
 
@@ -104,10 +115,7 @@ const AnalyticsDashboard: React.FC = () => {
 
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 3, height: '100%' }}>
-              <UsageMetrics
-                data={analyticsData?.usage}
-                dateRange={dateRange}
-              />
+              <UsageMetrics data={analyticsData?.usage} dateRange={dateRange} />
             </Paper>
           </Grid>
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import AnalyticsSubscriptionController, {
-  validateUpdatePreferences
-} from '../controllers/AnalyticsSubscriptionController';
+  validateUpdatePreferences,
+} from '../controllers/command';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
@@ -95,9 +95,6 @@ router.put(
  *       400:
  *         description: Invalid input or token
  */
-router.get(
-  '/unsubscribe',
-  AnalyticsSubscriptionController.unsubscribe
-);
+router.get('/unsubscribe', AnalyticsSubscriptionController.unsubscribe);
 
 export default router;

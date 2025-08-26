@@ -11,7 +11,7 @@ import {
   CardContent,
   Grid,
   Tooltip,
-  IconButton
+  IconButton,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -36,20 +36,20 @@ const EmailPreferences: React.FC<EmailPreferencesProps> = ({ preferences }) => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['subscriptionPreferences']);
-      }
+      },
     }
   );
 
-  const handlePreferenceChange = (type: 'daily' | 'weekly' | 'monthly') => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const updatedPreferences = {
-      ...preferences,
-      [`${type}Analytics`]: event.target.checked
-    };
+  const handlePreferenceChange =
+    (type: 'daily' | 'weekly' | 'monthly') =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedPreferences = {
+        ...preferences,
+        [`${type}Analytics`]: event.target.checked,
+      };
 
-    mutate(updatedPreferences);
-  };
+      mutate(updatedPreferences);
+    };
 
   const getReportDescription = (type: string): string => {
     switch (type) {
@@ -120,7 +120,9 @@ const EmailPreferences: React.FC<EmailPreferencesProps> = ({ preferences }) => {
                       disabled={isLoading}
                     />
                   }
-                  label={preferences.dailyAnalytics ? 'Subscribed' : 'Not subscribed'}
+                  label={
+                    preferences.dailyAnalytics ? 'Subscribed' : 'Not subscribed'
+                  }
                 />
               </FormGroup>
             </CardContent>
@@ -149,7 +151,11 @@ const EmailPreferences: React.FC<EmailPreferencesProps> = ({ preferences }) => {
                       disabled={isLoading}
                     />
                   }
-                  label={preferences.weeklyAnalytics ? 'Subscribed' : 'Not subscribed'}
+                  label={
+                    preferences.weeklyAnalytics
+                      ? 'Subscribed'
+                      : 'Not subscribed'
+                  }
                 />
               </FormGroup>
             </CardContent>
@@ -178,7 +184,11 @@ const EmailPreferences: React.FC<EmailPreferencesProps> = ({ preferences }) => {
                       disabled={isLoading}
                     />
                   }
-                  label={preferences.monthlyAnalytics ? 'Subscribed' : 'Not subscribed'}
+                  label={
+                    preferences.monthlyAnalytics
+                      ? 'Subscribed'
+                      : 'Not subscribed'
+                  }
                 />
               </FormGroup>
             </CardContent>
@@ -188,8 +198,9 @@ const EmailPreferences: React.FC<EmailPreferencesProps> = ({ preferences }) => {
 
       <Box sx={{ mt: 3 }}>
         <Typography variant="body2" color="text.secondary">
-          All reports are delivered in your timezone and include interactive charts and downloadable data.
-          You can unsubscribe at any time through these settings or via the unsubscribe link in any report email.
+          All reports are delivered in your timezone and include interactive
+          charts and downloadable data. You can unsubscribe at any time through
+          these settings or via the unsubscribe link in any report email.
         </Typography>
       </Box>
     </Box>

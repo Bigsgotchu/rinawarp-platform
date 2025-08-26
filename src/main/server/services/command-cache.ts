@@ -4,8 +4,8 @@ import { logger } from '../../utils/logger';
 import * as crypto from 'crypto';
 
 export interface CacheConfig {
-  ttl: number;               // Cache TTL in seconds
-  maxSize: number;           // Maximum number of entries to cache
+  ttl: number; // Cache TTL in seconds
+  maxSize: number; // Maximum number of entries to cache
   allowedCommands: string[]; // List of commands that can be cached
 }
 
@@ -17,9 +17,10 @@ export class CommandCacheService {
   constructor(config?: Partial<CacheConfig>) {
     this.cache = new CacheService();
     this.config = {
-      ttl: 3600,          // 1 hour
-      maxSize: 1000,      // 1000 entries
-      allowedCommands: [  // Safe, read-only commands
+      ttl: 3600, // 1 hour
+      maxSize: 1000, // 1000 entries
+      allowedCommands: [
+        // Safe, read-only commands
         'git status',
         'git log',
         'git branch',
@@ -94,10 +95,7 @@ export class CommandCacheService {
   /**
    * Clear cached result
    */
-  public async clear(
-    command: string,
-    cwd: string
-  ): Promise<void> {
+  public async clear(command: string, cwd: string): Promise<void> {
     try {
       const key = this.getCacheKey(command, cwd);
       await this.cache.delete(key);
@@ -126,7 +124,7 @@ export class CommandCacheService {
       .createHash('sha256')
       .update(`${command}:${cwd}`)
       .digest('hex');
-    
+
     return `${this.cachePrefix}${hash}`;
   }
 
@@ -136,12 +134,12 @@ export class CommandCacheService {
   private async trackCacheSize(): Promise<void> {
     try {
       const stats = await this.cache.getStats();
-      
+
       // If cache is too large, remove oldest entries
       if (stats.keys > this.config.maxSize) {
         // Get all command cache keys
         const keys = await this.getAllCacheKeys();
-        
+
         // Sort by access time and remove oldest
         const toRemove = keys
           .sort((a, b) => a.accessTime - b.accessTime)
@@ -159,10 +157,12 @@ export class CommandCacheService {
   /**
    * Get all cache keys with access times
    */
-  private async getAllCacheKeys(): Promise<Array<{
-    key: string;
-    accessTime: number;
-  }>> {
+  private async getAllCacheKeys(): Promise<
+    Array<{
+      key: string;
+      accessTime: number;
+    }>
+  > {
     try {
       // This is a placeholder - actual implementation would depend
       // on the cache backend's capabilities
@@ -203,11 +203,7 @@ export class CommandCacheService {
    */
   public async preload(cwd: string): Promise<void> {
     try {
-      const commands = [
-        'git status',
-        'git branch',
-        'ls -la',
-      ];
+      const commands = ['git status', 'git branch', 'ls -la'];
 
       for (const command of commands) {
         if (this.canCache(command)) {

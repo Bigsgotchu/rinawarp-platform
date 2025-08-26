@@ -69,10 +69,7 @@ export abstract class AIBaseCommand extends BaseCommand {
       if (suggestions.length > 0) {
         output += '\n\nSuggested actions:\n';
         output += suggestions
-          .map(
-            (s) =>
-              `${s.command} ${s.args.join(' ')}\n  ${s.description}`
-          )
+          .map(s => `${s.command} ${s.args.join(' ')}\n  ${s.description}`)
           .join('\n\n');
       }
 
@@ -94,5 +91,7 @@ export abstract class AIBaseCommand extends BaseCommand {
     }
   }
 
-  protected abstract handleFunctionCall(functionCall: AIMessage['functionCall']): Promise<CommandResult>;
+  protected abstract handleFunctionCall(
+    functionCall: AIMessage['functionCall']
+  ): Promise<CommandResult>;
 }

@@ -14,8 +14,13 @@ interface SlackNotificationParams {
 /**
  * Send a notification to Slack
  */
-export async function sendSlackNotification(params: SlackNotificationParams): Promise<void> {
-  if (!config.monitoring.alerts.slack.enabled || !config.monitoring.alerts.slack.webhook) {
+export async function sendSlackNotification(
+  params: SlackNotificationParams
+): Promise<void> {
+  if (
+    !config.monitoring.alerts.slack.enabled ||
+    !config.monitoring.alerts.slack.webhook
+  ) {
     return;
   }
 
@@ -25,7 +30,8 @@ export async function sendSlackNotification(params: SlackNotificationParams): Pr
 
     // Format metadata as a string if present
     const metadataText = params.metadata
-      ? '\n\n*Additional Details:*\n' + Object.entries(params.metadata)
+      ? '\n\n*Additional Details:*\n' +
+        Object.entries(params.metadata)
           .map(([key, value]) => `• ${key}: ${JSON.stringify(value)}`)
           .join('\n')
       : '';
@@ -42,28 +48,28 @@ export async function sendSlackNotification(params: SlackNotificationParams): Pr
               text: {
                 type: 'plain_text',
                 text: `${emoji} ${params.title}`,
-                emoji: true
-              }
+                emoji: true,
+              },
             },
             {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: params.message + metadataText
-              }
+                text: params.message + metadataText,
+              },
             },
             {
               type: 'context',
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: `*Level:* ${params.level} | *Time:* ${new Date().toISOString()}`
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                  text: `*Level:* ${params.level} | *Time:* ${new Date().toISOString()}`,
+                },
+              ],
+            },
+          ],
+        },
+      ],
     };
 
     // Send to Slack
@@ -76,7 +82,10 @@ export async function sendSlackNotification(params: SlackNotificationParams): Pr
 /**
  * Get Slack formatting for different alert levels
  */
-function getSlackFormatting(level: AlertLevel): { emoji: string; color: string } {
+function getSlackFormatting(level: AlertLevel): {
+  emoji: string;
+  color: string;
+} {
   switch (level) {
     case 'INFO':
       return { emoji: 'ℹ️', color: '#2196F3' };

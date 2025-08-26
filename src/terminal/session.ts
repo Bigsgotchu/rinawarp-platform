@@ -24,7 +24,7 @@ export class TerminalSession extends EventEmitter {
 
   private constructor(options: TerminalOptions = {}) {
     super();
-    
+
     this.options = {
       initialSize: { rows: 24, cols: 80 },
       historySize: 1000,
@@ -92,7 +92,7 @@ export class TerminalSession extends EventEmitter {
 
       // Parse command
       const parsed = this.parseCommand(command);
-      
+
       // Track command execution
       UsageTrackingService.getInstance().trackUsage('command.execute', 1, {
         command: parsed.command,
@@ -108,7 +108,7 @@ export class TerminalSession extends EventEmitter {
 
       // Execute command (implement actual execution logic)
       const result = await this.executeCommandInternal(parsed);
-      
+
       // Update history
       this.updateHistory(command);
 
@@ -132,7 +132,7 @@ export class TerminalSession extends EventEmitter {
       return commandResult;
     } catch (error) {
       logger.error('Command execution failed:', error);
-      
+
       const result: CommandResult = {
         output: error.message,
         exitCode: 1,
@@ -168,22 +168,22 @@ export class TerminalSession extends EventEmitter {
   public write(data: string): void {
     // Split into lines
     const lines = data.split('\n');
-    
+
     // Update buffer
     for (const line of lines) {
       if (this.state.cursorY >= this.state.buffer.length) {
         this.state.buffer.push('');
       }
-      
+
       const currentLine = this.state.buffer[this.state.cursorY];
-      const newLine = 
+      const newLine =
         currentLine.slice(0, this.state.cursorX) +
         line +
         currentLine.slice(this.state.cursorX);
-      
+
       this.state.buffer[this.state.cursorY] = newLine;
       this.state.cursorX += line.length;
-      
+
       // Move to next line if not last line
       if (lines.indexOf(line) < lines.length - 1) {
         this.state.cursorY++;
@@ -257,13 +257,18 @@ export class TerminalSession extends EventEmitter {
     };
   }
 
-  private async executeCommandInternal(command: TerminalCommand): Promise<string> {
+  private async executeCommandInternal(
+    command: TerminalCommand
+  ): Promise<string> {
     // Implement actual command execution here
     return `Executed: ${command.raw}`;
   }
 
   private updateHistory(command: string): void {
-    if (command && command !== this.state.history[this.state.history.length - 1]) {
+    if (
+      command &&
+      command !== this.state.history[this.state.history.length - 1]
+    ) {
       this.state.history.push(command);
       if (this.state.history.length > this.options.historySize) {
         this.state.history.shift();

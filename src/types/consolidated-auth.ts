@@ -30,13 +30,16 @@ export interface TerminalUser {
   } | null;
 }
 
-export const convertTerminalUserToAuthPayload = (user: TerminalUser): AuthPayload => {
+export const convertTerminalUserToAuthPayload = (
+  user: TerminalUser
+): AuthPayload => {
   return {
     userId: user.id,
     email: user.email,
     name: user.name,
     role: UserRole.USER, // Default to USER role unless explicitly set
-    plan: user.subscription?.planId as SubscriptionPlan || SubscriptionPlan.FREE,
+    plan:
+      (user.subscription?.planId as SubscriptionPlan) || SubscriptionPlan.FREE,
     subscription: user.subscription,
   };
 };

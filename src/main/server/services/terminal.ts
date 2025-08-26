@@ -47,8 +47,11 @@ export class TerminalService extends EventEmitter {
       const now = new Date();
 
       // Determine shell type
-      const shellType = options.shellType || process.platform === 'win32' ? 'powershell' : 'zsh';
-      
+      const shellType =
+        options.shellType || process.platform === 'win32'
+          ? 'powershell'
+          : 'zsh';
+
       // Get shell command and args
       const { command, args } = this.getShellCommand(shellType);
 
@@ -245,7 +248,10 @@ export class TerminalService extends EventEmitter {
   /**
    * Get shell command and args
    */
-  private getShellCommand(shellType: string): { command: string; args: string[] } {
+  private getShellCommand(shellType: string): {
+    command: string;
+    args: string[];
+  } {
     switch (shellType.toLowerCase()) {
       case 'powershell':
         return {
@@ -317,7 +323,9 @@ export class TerminalService extends EventEmitter {
   /**
    * Clean up inactive sessions
    */
-  public async cleanupInactiveSessions(maxAge: number = 24 * 3600 * 1000): Promise<void> {
+  public async cleanupInactiveSessions(
+    maxAge: number = 24 * 3600 * 1000
+  ): Promise<void> {
     try {
       const now = new Date();
       const cutoff = new Date(now.getTime() - maxAge);

@@ -1,5 +1,5 @@
 import express from 'express';
-import AuthController from '../controllers/AuthController';
+import AuthController from '../controllers/command';
 import { require2FA } from '../middleware/require2FA';
 import { session, requireSession } from '../middleware/session';
 import { validateAuth } from '../middleware/authValidation';
@@ -35,10 +35,7 @@ const router = express.Router();
  *       201:
  *         description: User registered successfully
  */
-router.post('/register',
-  validateAuth.register,
-  AuthController.register
-);
+router.post('/register', validateAuth.register, AuthController.register);
 
 /**
  * @swagger
@@ -64,10 +61,7 @@ router.post('/register',
  *       200:
  *         description: Login successful
  */
-router.post('/login',
-  validateAuth.login,
-  AuthController.login
-);
+router.post('/login', validateAuth.login, AuthController.login);
 
 /**
  * @swagger
@@ -90,10 +84,7 @@ router.post('/login',
  *       200:
  *         description: New tokens generated
  */
-router.post('/refresh',
-  validateAuth.refresh,
-  AuthController.refreshToken
-);
+router.post('/refresh', validateAuth.refresh, AuthController.refreshToken);
 
 /**
  * @swagger
@@ -118,7 +109,8 @@ router.post('/refresh',
  *       204:
  *         description: Logged out successfully
  */
-router.post('/logout',
+router.post(
+  '/logout',
   authenticate,
   validateAuth.logout,
   AuthController.logout
@@ -145,7 +137,8 @@ router.post('/logout',
  *       200:
  *         description: Password reset email sent
  */
-router.post('/reset-password',
+router.post(
+  '/reset-password',
   validateAuth.resetPassword,
   AuthController.resetPassword
 );
@@ -174,7 +167,8 @@ router.post('/reset-password',
  *       200:
  *         description: Password reset successful
  */
-router.post('/reset-password/confirm',
+router.post(
+  '/reset-password/confirm',
   validateAuth.confirmResetPassword,
   AuthController.confirmResetPassword
 );
@@ -206,7 +200,8 @@ router.post('/reset-password/confirm',
  *       200:
  *         description: Subscription created successfully
  */
-router.post('/subscriptions',
+router.post(
+  '/subscriptions',
   authenticate,
   validateSubscription.create,
   AuthController.createSubscription
@@ -236,7 +231,8 @@ router.post('/subscriptions',
  *       200:
  *         description: Subscription updated successfully
  */
-router.put('/subscriptions',
+router.put(
+  '/subscriptions',
   authenticate,
   validateSubscription.update,
   AuthController.updateSubscription
@@ -254,7 +250,8 @@ router.put('/subscriptions',
  *       200:
  *         description: Subscription cancelled successfully
  */
-router.delete('/subscriptions',
+router.delete(
+  '/subscriptions',
   authenticate,
   AuthController.cancelSubscription
 );
@@ -271,7 +268,8 @@ router.delete('/subscriptions',
  *       200:
  *         description: Current subscription status
  */
-router.get('/subscriptions/status',
+router.get(
+  '/subscriptions/status',
   authenticate,
   AuthController.getSubscriptionStatus
 );
@@ -288,10 +286,7 @@ router.get('/subscriptions/status',
  *       200:
  *         description: 2FA setup initialized
  */
-router.post('/2fa/setup',
-  authenticate,
-  AuthController.initialize2FA
-);
+router.post('/2fa/setup', authenticate, AuthController.initialize2FA);
 
 /**
  * @swagger
@@ -316,10 +311,7 @@ router.post('/2fa/setup',
  *       200:
  *         description: 2FA setup verified
  */
-router.post('/2fa/verify',
-  authenticate,
-  AuthController.verify2FA
-);
+router.post('/2fa/verify', authenticate, AuthController.verify2FA);
 
 /**
  * @swagger
@@ -344,7 +336,8 @@ router.post('/2fa/verify',
  *       200:
  *         description: 2FA disabled
  */
-router.post('/2fa/disable',
+router.post(
+  '/2fa/disable',
   authenticate,
   require2FA,
   AuthController.disable2FA
@@ -362,7 +355,8 @@ router.post('/2fa/disable',
  *       200:
  *         description: List of active sessions
  */
-router.get('/sessions',
+router.get(
+  '/sessions',
   authenticate,
   requireSession,
   AuthController.getActiveSessions
@@ -386,7 +380,8 @@ router.get('/sessions',
  *       204:
  *         description: Session terminated
  */
-router.delete('/sessions/:sessionId',
+router.delete(
+  '/sessions/:sessionId',
   authenticate,
   requireSession,
   AuthController.terminateSession
@@ -404,7 +399,8 @@ router.delete('/sessions/:sessionId',
  *       204:
  *         description: All other sessions terminated
  */
-router.delete('/sessions',
+router.delete(
+  '/sessions',
   authenticate,
   requireSession,
   AuthController.terminateAllSessions
@@ -420,7 +416,8 @@ router.delete('/sessions',
  *       200:
  *         description: Webhook handled successfully
  */
-router.post('/webhooks/stripe',
+router.post(
+  '/webhooks/stripe',
   express.raw({ type: 'application/json' }),
   AuthController.handleStripeWebhook
 );

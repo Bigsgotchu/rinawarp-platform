@@ -17,9 +17,17 @@ router.get('/tiers', getSubscriptionTiers);
 
 // Protected routes
 router.use(authenticate);
-router.post('/subscribe', trackUsage(UsageType.API_REQUEST), createSubscription);
+router.post(
+  '/subscribe',
+  trackUsage(UsageType.API_REQUEST),
+  createSubscription
+);
 router.post('/cancel', trackUsage(UsageType.API_REQUEST), cancelSubscription);
-router.get('/current', trackUsage(UsageType.API_REQUEST), getCurrentSubscription);
+router.get(
+  '/current',
+  trackUsage(UsageType.API_REQUEST),
+  getCurrentSubscription
+);
 router.get('/usage', trackUsage(UsageType.API_REQUEST), getUsageStats);
 
 export default router;

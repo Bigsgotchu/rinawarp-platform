@@ -11,7 +11,8 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Rinawarp API',
       version: '1.0.0',
-      description: 'A modern, AI-powered terminal that enhances developer productivity',
+      description:
+        'A modern, AI-powered terminal that enhances developer productivity',
       license: {
         name: 'MIT',
         url: 'https://opensource.org/licenses/MIT',
@@ -39,8 +40,15 @@ const options: swaggerJsdoc.Options = {
           required: ['command'],
           properties: {
             command: { type: 'string', description: 'The command to execute' },
-            args: { type: 'array', items: { type: 'string' }, description: 'Command arguments' },
-            cwd: { type: 'string', description: 'Working directory for command execution' },
+            args: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Command arguments',
+            },
+            cwd: {
+              type: 'string',
+              description: 'Working directory for command execution',
+            },
           },
         },
         CommandResult: {

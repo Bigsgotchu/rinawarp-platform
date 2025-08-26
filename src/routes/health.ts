@@ -1,3 +1,13 @@
+import express from 'express';
+import { HealthController } from '../controllers/command';
+
+const router = express.Router();
+
+router.get('/', HealthController.check);
+router.get('/detailed', HealthController.detailed);
+
+export const healthRouter = router;
+
 import { Router } from 'express';
 import { metricsHandler } from '../services/prometheus';
 import healthService from '../services/health';
@@ -21,7 +31,7 @@ router.get('/health/detailed', async (req, res) => {
   try {
     const results = await healthService.runHealthChecks();
     const isHealthy = Object.values(results).every(
-      (result) => result.status === 'healthy'
+      result => result.status === 'healthy'
     );
 
     res.status(isHealthy ? 200 : 503).json({

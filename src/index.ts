@@ -105,7 +105,7 @@ app.listen(port, async () => {
   // Start metrics collection
   monitoring.startMetricsCollection();
   console.log(`Server running on port ${port}`);
-  
+
   // Initialize analytics report scheduler
   try {
     await AnalyticsReportScheduler.start();
@@ -125,7 +125,7 @@ process.on('SIGTERM', async () => {
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Uncaught Exception', { error });
   monitoring.captureError(error);
   process.exit(1);

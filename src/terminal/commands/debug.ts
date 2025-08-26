@@ -190,19 +190,19 @@ Guide users through the debugging process step by step.`;
   private setupSessionListeners(): void {
     if (!this.activeSession) return;
 
-    this.activeSession.on('error', (error) => {
+    this.activeSession.on('error', error => {
       console.error('Debug session error:', error);
     });
 
-    this.activeSession.on('step', (step) => {
+    this.activeSession.on('step', step => {
       console.log(`Debug step ${step.id}:`, step.action);
     });
 
-    this.activeSession.on('solutions', (solutions) => {
+    this.activeSession.on('solutions', solutions => {
       console.log('New solutions available:', solutions.length);
     });
 
-    this.activeSession.on('end', (result) => {
+    this.activeSession.on('end', result => {
       console.log('Debug session ended with', result.steps.length, 'steps');
     });
   }
@@ -253,4 +253,3 @@ export default new DebugCommand({
     },
   },
 });
-

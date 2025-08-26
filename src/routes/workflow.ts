@@ -1,8 +1,8 @@
 import express from 'express';
 import { validateCommand } from '../middleware/validation';
 import { validateWorkflowQuery } from '../middleware/workflowValidation';
-import CommandController from '../controllers/CommandController';
-import WorkflowLearningService from '../services/WorkflowLearningService';
+import CommandController from '../controllers/command';
+import WorkflowLearningService from '../services/command';
 import { AppError } from '../middleware/errorHandler';
 
 const router = express.Router();
@@ -113,21 +113,25 @@ router.post('/workflows/record', [validateCommand], async (req, res, next) => {
  *       200:
  *         description: Workflow suggestions
  */
-router.get('/workflows/suggest', [validateWorkflowQuery], async (req, res, next) => {
-  try {
-    const { command, workspacePath } = req.query;
-    if (!command) {
-      throw new AppError('Command is required', 'INVALID_INPUT', 400);
+router.get(
+  '/workflows/suggest',
+  [validateWorkflowQuery],
+  async (req, res, next) => {
+    try {
+      const { command, workspacePath } = req.query;
+      if (!command) {
+        throw new AppError('Command is required', 'INVALID_INPUT', 400);
+      }
+
+      const workflow = await WorkflowLearningService.suggestWorkflow(
+        command as string,
+        workspacePath as string
+      );
+      res.json(workflow);
+    } catch (error) {
+      next(error);
     }
-    
-    const workflow = await WorkflowLearningService.suggestWorkflow(
-      command as string,
-      workspacePath as string
-    );
-    res.json(workflow);
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;

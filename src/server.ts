@@ -25,7 +25,7 @@ app.get('/api/subscription-tiers', async (req, res) => {
   try {
     const tiers = await prisma.subscriptionTier.findMany({
       where: { active: true },
-      orderBy: { price: 'asc' }
+      orderBy: { price: 'asc' },
     });
     res.json(tiers);
   } catch (error) {

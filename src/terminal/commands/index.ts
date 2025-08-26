@@ -16,7 +16,7 @@ import { OptimizeCommand } from './optimize';
 
 export function registerCommands(context: any): void {
   const registry = CommandRegistry.getInstance();
-  
+
   // System commands
   registry.register(new HelpCommand(context));
   registry.register(new ClearCommand(context));

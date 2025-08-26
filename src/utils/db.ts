@@ -26,13 +26,13 @@ export const getPrismaClient = (): PrismaClient => {
       ],
     });
 
-    prisma.$on('query', (e) => {
+    prisma.$on('query', e => {
       logger.debug('Query: ' + e.query);
       logger.debug('Params: ' + e.params);
       logger.debug('Duration: ' + e.duration + 'ms');
     });
 
-    prisma.$on('error', (e) => {
+    prisma.$on('error', e => {
       logger.error('Database error:', e);
     });
   }

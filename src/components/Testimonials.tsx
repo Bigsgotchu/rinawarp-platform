@@ -18,7 +18,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({ testimonials }) => {
     <section className="testimonials-section">
       <h2>What Our Customers Say</h2>
       <div className="testimonials-grid">
-        {testimonials.map((testimonial) => (
+        {testimonials.map(testimonial => (
           <div key={testimonial.id} className="testimonial-card">
             <div className="testimonial-content">
               <blockquote>{testimonial.content}</blockquote>

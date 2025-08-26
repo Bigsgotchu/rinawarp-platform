@@ -1,8 +1,8 @@
 import express from 'express';
 import { authenticate } from '../middleware/authenticate';
 import { validateBilling } from '../middleware/billingValidation';
-import BillingService from '../services/BillingService';
-import SubscriptionService from '../services/SubscriptionService';
+import BillingService from '../services/command';
+import SubscriptionService from '../services/command';
 import { AppError } from '../middleware/errorHandler';
 import { SubscriptionPlan } from '../types/auth';
 import {
@@ -22,7 +22,8 @@ const router = express.Router();
 router.use(securityHeaders);
 
 // Payment methods management
-router.get('/payment-methods',
+router.get(
+  '/payment-methods',
   authenticate,
   paymentRateLimiter,
   async (req, res, next) => {
@@ -37,7 +38,8 @@ router.get('/payment-methods',
   }
 );
 
-router.post('/payment-methods',
+router.post(
+  '/payment-methods',
   authenticate,
   validateBilling.addPaymentMethod,
   paymentRateLimiter,
@@ -49,10 +51,10 @@ router.post('/payment-methods',
       const { paymentMethodId } = req.body;
 
       await BillingService.updatePaymentMethod(userId, paymentMethodId);
-      
+
       // Log successful payment method addition
       logger.info(`Payment method added for user ${userId}`);
-      
+
       res.json({ message: 'Payment method added successfully' });
     } catch (error) {
       logger.error('Failed to add payment method:', error);
@@ -62,7 +64,8 @@ router.post('/payment-methods',
 );
 
 // Subscription management
-router.post('/subscriptions',
+router.post(
+  '/subscriptions',
   authenticate,
   validateBilling.createSubscription,
   paymentRateLimiter,
@@ -98,18 +101,19 @@ router.post('/subscriptions',
 );
 
 // Webhook handling
-router.post('/webhooks/stripe',
+router.post(
+  '/webhooks/stripe',
   express.raw({ type: 'application/json' }),
   verifyStripeWebhook,
   async (req, res, next) => {
     try {
       const event = req.stripeEvent;
-      
+
       // Log webhook event
       logger.info(`Processing Stripe webhook: ${event.type}`);
 
       await StripePortalService.handlePortalEvent(event);
-      
+
       res.json({ received: true });
     } catch (error) {
       logger.error('Failed to handle Stripe webhook:', error);
@@ -119,7 +123,8 @@ router.post('/webhooks/stripe',
 );
 
 // Invoice management
-router.get('/invoices',
+router.get(
+  '/invoices',
   authenticate,
   paymentRateLimiter,
   async (req, res, next) => {

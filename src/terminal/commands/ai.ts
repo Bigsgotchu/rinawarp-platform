@@ -119,9 +119,7 @@ export class AICommand extends BaseCommand {
       }
 
       // Get command suggestions
-      const suggestions = await AIService.getInstance().getSuggestions(
-        query
-      );
+      const suggestions = await AIService.getInstance().getSuggestions(query);
 
       // Format response
       const output = `${response.message.content}
@@ -131,7 +129,7 @@ ${
     ? `\nSuggested commands:
 ${suggestions
   .map(
-    (s) =>
+    s =>
       `${s.command} ${s.args.join(' ')}
   ${s.description}`
   )

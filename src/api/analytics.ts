@@ -1,10 +1,14 @@
+import axios from 'axios';
+import { format } from 'date-fns';
+
+export function formatUsageDate(date: Date): string {
+  return format(date, 'yyyy-MM-dd');
+}
+
 /**
  * Copyright (c) 2024-2025 Rinawarp Technologies, LLC. All rights reserved.
  * Licensed under the MIT License.
  */
-
-import axios from 'axios';
-import { format } from 'date-fns';
 
 /**
  * Fetch analytics report for a specified date range
@@ -13,8 +17,8 @@ export const fetchAnalyticsReport = async (startDate: Date, endDate: Date) => {
   const response = await axios.get('/api/analytics/report', {
     params: {
       start: format(startDate, 'yyyy-MM-dd'),
-      end: format(endDate, 'yyyy-MM-dd')
-    }
+      end: format(endDate, 'yyyy-MM-dd'),
+    },
   });
   return response.data;
 };
@@ -51,8 +55,8 @@ export const fetchHistoricalReports = async (
     params: {
       start: format(startDate, 'yyyy-MM-dd'),
       end: format(endDate, 'yyyy-MM-dd'),
-      type
-    }
+      type,
+    },
   });
   return response.data;
 };
@@ -68,8 +72,8 @@ export const fetchPlanAnalytics = async (
   const response = await axios.get(`/api/analytics/plans/${plan}`, {
     params: {
       start: format(startDate, 'yyyy-MM-dd'),
-      end: format(endDate, 'yyyy-MM-dd')
-    }
+      end: format(endDate, 'yyyy-MM-dd'),
+    },
   });
   return response.data;
 };
@@ -86,8 +90,8 @@ export const fetchUsageTrends = async (
     params: {
       start: format(startDate, 'yyyy-MM-dd'),
       end: format(endDate, 'yyyy-MM-dd'),
-      interval
-    }
+      interval,
+    },
   });
   return response.data;
 };

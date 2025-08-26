@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import AnalyticsService from '../services/AnalyticsService';
+import AnalyticsService from '../services/command';
 import { sendEmail } from '../utils/email';
 import logger from '../utils/logger';
 import db from '../utils/db';
@@ -10,9 +10,9 @@ interface ReportRecipient {
 }
 
 class AnalyticsJobs {
-  private readonly DAILY_REPORT_TIME = '0 1 * * *';    // 1 AM every day
-  private readonly WEEKLY_REPORT_TIME = '0 2 * * 1';   // 2 AM every Monday
-  private readonly MONTHLY_REPORT_TIME = '0 3 1 * *';  // 3 AM on 1st of each month
+  private readonly DAILY_REPORT_TIME = '0 1 * * *'; // 1 AM every day
+  private readonly WEEKLY_REPORT_TIME = '0 2 * * 1'; // 2 AM every Monday
+  private readonly MONTHLY_REPORT_TIME = '0 3 1 * *'; // 3 AM on 1st of each month
 
   private readonly reportRecipients: ReportRecipient[] = [
     {
@@ -108,7 +108,7 @@ class AnalyticsJobs {
     type: 'daily' | 'weekly' | 'monthly',
     report: any
   ): Promise<void> {
-    const recipients = this.reportRecipients.filter(r => 
+    const recipients = this.reportRecipients.filter(r =>
       r.reportTypes.includes(type)
     );
 
@@ -157,7 +157,11 @@ class AnalyticsJobs {
         ([plan, count]) => ({
           plan,
           count,
-          percentage: ((count as number / subscriptions.totalSubscriptions) * 100).toFixed(1) + '%',
+          percentage:
+            (
+              ((count as number) / subscriptions.totalSubscriptions) *
+              100
+            ).toFixed(1) + '%',
         })
       ),
       mrr: this.formatMoney(subscriptions.mrr),

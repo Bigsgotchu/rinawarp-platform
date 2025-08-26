@@ -1,7 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middleware/authenticate';
 import { checkRole } from '../middleware/roleCheck';
-import StripePortalService from '../services/StripePortalService';
+import StripePortalService from '../services/command';
 import { AppError } from '../middleware/errorHandler';
 
 const router = express.Router();
@@ -25,18 +25,15 @@ const router = express.Router();
  *                 url:
  *                   type: string
  */
-router.post('/session',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      const { userId } = req.user!;
-      const url = await StripePortalService.createPortalSession(userId);
-      res.json({ url });
-    } catch (error) {
-      next(error);
-    }
+router.post('/session', authenticate, async (req, res, next) => {
+  try {
+    const { userId } = req.user!;
+    const url = await StripePortalService.createPortalSession(userId);
+    res.json({ url });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 /**
  * @swagger
@@ -50,17 +47,14 @@ router.post('/session',
  *       200:
  *         description: Portal features configuration
  */
-router.get('/features',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      const features = await StripePortalService.getPortalFeatures();
-      res.json(features);
-    } catch (error) {
-      next(error);
-    }
+router.get('/features', authenticate, async (req, res, next) => {
+  try {
+    const features = await StripePortalService.getPortalFeatures();
+    res.json(features);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 /**
  * @swagger
@@ -89,7 +83,8 @@ router.get('/features',
  *       200:
  *         description: Portal configuration updated
  */
-router.put('/config',
+router.put(
+  '/config',
   authenticate,
   checkRole('ADMIN'),
   async (req, res, next) => {
@@ -129,30 +124,27 @@ router.put('/config',
  *       200:
  *         description: Checkout session URL
  */
-router.post('/checkout',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      const { userId } = req.user!;
-      const { priceId, successUrl, cancelUrl } = req.body;
+router.post('/checkout', authenticate, async (req, res, next) => {
+  try {
+    const { userId } = req.user!;
+    const { priceId, successUrl, cancelUrl } = req.body;
 
-      if (!priceId) {
-        throw new AppError('Price ID is required', 'INVALID_INPUT', 400);
-      }
-
-      const sessionUrl = await StripePortalService.createCheckoutSession(
-        userId,
-        priceId,
-        successUrl || `${process.env.FRONTEND_URL}/billing/success`,
-        cancelUrl || `${process.env.FRONTEND_URL}/billing/cancel`
-      );
-
-      res.json({ url: sessionUrl });
-    } catch (error) {
-      next(error);
+    if (!priceId) {
+      throw new AppError('Price ID is required', 'INVALID_INPUT', 400);
     }
+
+    const sessionUrl = await StripePortalService.createCheckoutSession(
+      userId,
+      priceId,
+      successUrl || `${process.env.FRONTEND_URL}/billing/success`,
+      cancelUrl || `${process.env.FRONTEND_URL}/billing/cancel`
+    );
+
+    res.json({ url: sessionUrl });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 /**
  * @swagger
@@ -170,12 +162,13 @@ router.post('/checkout',
  *       200:
  *         description: Event handled successfully
  */
-router.post('/events',
+router.post(
+  '/events',
   express.raw({ type: 'application/json' }),
   async (req, res, next) => {
     try {
       const sig = req.headers['stripe-signature'];
-      
+
       if (!sig) {
         throw new AppError('No Stripe signature found', 'INVALID_WEBHOOK', 400);
       }
@@ -206,16 +199,13 @@ router.post('/events',
  *       200:
  *         description: Return handling successful
  */
-router.get('/return',
-  authenticate,
-  async (req, res, next) => {
-    try {
-      // Handle any necessary cleanup or state updates after portal session
-      res.redirect('/settings/billing');
-    } catch (error) {
-      next(error);
-    }
+router.get('/return', authenticate, async (req, res, next) => {
+  try {
+    // Handle any necessary cleanup or state updates after portal session
+    res.redirect('/settings/billing');
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 export default router;

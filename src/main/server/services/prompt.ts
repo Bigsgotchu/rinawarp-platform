@@ -66,13 +66,10 @@ export class PromptService {
   ): Promise<string> {
     try {
       const segments = await Promise.all(
-        config.segments.map(segment =>
-          this.renderSegment(segment, userId, cwd)
-        )
+        config.segments.map(segment => this.renderSegment(segment, userId, cwd))
       );
 
-      return segments.join(config.separator) +
-        (config.newline ? '\n' : ' ');
+      return segments.join(config.separator) + (config.newline ? '\n' : ' ');
     } catch (error) {
       logger.error('Failed to get prompt:', error);
       return '$ ';
@@ -156,7 +153,9 @@ export class PromptService {
           const branch = execSync('git branch --show-current', {
             cwd,
             stdio: ['ignore', 'pipe', 'ignore'],
-          }).toString().trim();
+          })
+            .toString()
+            .trim();
 
           result = result.replace('\\g', branch);
         } catch {
@@ -170,7 +169,9 @@ export class PromptService {
           const status = execSync('git status --porcelain', {
             cwd,
             stdio: ['ignore', 'pipe', 'ignore'],
-          }).toString().trim();
+          })
+            .toString()
+            .trim();
 
           const indicators = [];
           if (status.match(/^\s*M/m)) indicators.push('*');
@@ -194,10 +195,7 @@ export class PromptService {
   /**
    * Apply ANSI styling
    */
-  private applyStyle(
-    text: string,
-    style: PromptSegment
-  ): string {
+  private applyStyle(text: string, style: PromptSegment): string {
     const codes: number[] = [];
 
     if (style.bold) codes.push(1);
@@ -222,10 +220,7 @@ export class PromptService {
   /**
    * Get ANSI color code
    */
-  private getColorCode(
-    color: string,
-    background: boolean = false
-  ): number[] {
+  private getColorCode(color: string, background: boolean = false): number[] {
     // Check if it's a 256-color code
     if (color.match(/^\d{1,3}$/)) {
       return [background ? 48 : 38, 5, parseInt(color)];

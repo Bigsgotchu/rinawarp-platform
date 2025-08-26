@@ -39,7 +39,7 @@ export class SubscriptionService extends EventEmitter {
   private stripe: StripeService;
   private license: LicenseService;
   private cache: CacheService;
-  
+
   private readonly cacheTTL = 3600; // 1 hour
   private readonly subscriptionCachePrefix = 'subscription:';
 
@@ -55,13 +55,17 @@ export class SubscriptionService extends EventEmitter {
    */
   public async getSubscription(userId: string): Promise<Subscription | null> {
     const cacheKey = `${this.subscriptionCachePrefix}${userId}`;
-    
-    return this.cache.getOrSet(cacheKey, async () => {
-      return db.subscriptions.findOne({
-        userId,
-        status: 'active'
-      });
-    }, this.cacheTTL);
+
+    return this.cache.getOrSet(
+      cacheKey,
+      async () => {
+        return db.subscriptions.findOne({
+          userId,
+          status: 'active',
+        });
+      },
+      this.cacheTTL
+    );
   }
 
   /**
@@ -96,7 +100,7 @@ export class SubscriptionService extends EventEmitter {
         );
 
         await db.users.update(userId, { stripeCustomerId });
-        
+
         // Invalidate user cache
         await this.cache.delete(`user:${userId}`);
       }
@@ -116,8 +120,8 @@ export class SubscriptionService extends EventEmitter {
           trialDays: options.trial ? 14 : undefined,
           metadata: {
             userId,
-            plan
-          }
+            plan,
+          },
         }
       );
 
@@ -141,7 +145,7 @@ export class SubscriptionService extends EventEmitter {
   ): Promise<void> {
     try {
       const subscription = await db.subscriptions.findOne({
-        id: subscriptionId
+        id: subscriptionId,
       });
 
       if (!subscription) {
@@ -172,9 +176,11 @@ export class SubscriptionService extends EventEmitter {
         subscription.stripeSubscriptionId!,
         stripeUpdates
       );
-      
+
       // Invalidate subscription cache
-      await this.cache.delete(`${this.subscriptionCachePrefix}${subscription.userId}`);
+      await this.cache.delete(
+        `${this.subscriptionCachePrefix}${subscription.userId}`
+      );
     } catch (error) {
       logger.error('Failed to update subscription:', error);
       throw error;
@@ -190,7 +196,7 @@ export class SubscriptionService extends EventEmitter {
   ): Promise<void> {
     try {
       const subscription = await db.subscriptions.findOne({
-        id: subscriptionId
+        id: subscriptionId,
       });
 
       if (!subscription) {
@@ -204,11 +210,11 @@ export class SubscriptionService extends EventEmitter {
 
       if (immediate) {
         await this.license.deactivateLicense(subscription.userId);
-        
+
         // Invalidate subscription and license caches
         await this.cache.mdelete([
           `${this.subscriptionCachePrefix}${subscription.userId}`,
-          `license:${subscription.userId}`
+          `license:${subscription.userId}`,
         ]);
       }
     } catch (error) {
@@ -222,72 +228,78 @@ export class SubscriptionService extends EventEmitter {
    */
   public async getPlans(): Promise<SubscriptionPlan[]> {
     const cacheKey = 'subscription:plans';
-    
-    return this.cache.getOrSet(cacheKey, async () => {
-      return [
-        {
-          id: 'pro',
-          name: 'Pro',
-          description: 'For professional developers who want to boost their productivity.',
-          features: [
-            'AI-powered assistance',
-            'Advanced autocomplete',
-            'Smart automation',
-            'Code intelligence',
-            'Enhanced Git features',
-            'Priority support'
-          ],
-          prices: {
-            monthly: 49,
-            annual: 39 * 12
+
+    return this.cache.getOrSet(
+      cacheKey,
+      async () => {
+        return [
+          {
+            id: 'pro',
+            name: 'Pro',
+            description:
+              'For professional developers who want to boost their productivity.',
+            features: [
+              'AI-powered assistance',
+              'Advanced autocomplete',
+              'Smart automation',
+              'Code intelligence',
+              'Enhanced Git features',
+              'Priority support',
+            ],
+            prices: {
+              monthly: 49,
+              annual: 39 * 12,
+            },
+            limits: {},
           },
-          limits: {}
-        },
-        {
-          id: 'team',
-          name: 'Team',
-          description: 'For development teams that want to collaborate effectively.',
-          features: [
-            'Everything in Pro',
-            'Team sharing',
-            'Shared context',
-            'Custom workflows',
-            'Usage analytics',
-            'Role management',
-            'Dedicated support'
-          ],
-          prices: {
-            monthly: 99,
-            annual: 89 * 12
+          {
+            id: 'team',
+            name: 'Team',
+            description:
+              'For development teams that want to collaborate effectively.',
+            features: [
+              'Everything in Pro',
+              'Team sharing',
+              'Shared context',
+              'Custom workflows',
+              'Usage analytics',
+              'Role management',
+              'Dedicated support',
+            ],
+            prices: {
+              monthly: 99,
+              annual: 89 * 12,
+            },
+            limits: {
+              minSeats: 5,
+              maxSeats: 50,
+            },
           },
-          limits: {
-            minSeats: 5,
-            maxSeats: 50
-          }
-        },
-        {
-          id: 'enterprise',
-          name: 'Enterprise',
-          description: 'Custom solutions for large organizations.',
-          features: [
-            'Everything in Team',
-            'Custom integrations',
-            'Advanced security',
-            'Audit logging',
-            'SSO support',
-            'SLA guarantees',
-            '24/7 support'
-          ],
-          prices: {
-            monthly: 149,
-            annual: 139 * 12
+          {
+            id: 'enterprise',
+            name: 'Enterprise',
+            description: 'Custom solutions for large organizations.',
+            features: [
+              'Everything in Team',
+              'Custom integrations',
+              'Advanced security',
+              'Audit logging',
+              'SSO support',
+              'SLA guarantees',
+              '24/7 support',
+            ],
+            prices: {
+              monthly: 149,
+              annual: 139 * 12,
+            },
+            limits: {
+              minSeats: 50,
+            },
           },
-          limits: {
-            minSeats: 50
-          }
-        }
-      ];
-    }, 24 * 3600); // Cache plans for 24 hours
+        ];
+      },
+      24 * 3600
+    ); // Cache plans for 24 hours
   }
 
   /**
@@ -300,7 +312,7 @@ export class SubscriptionService extends EventEmitter {
       'team-monthly': process.env.STRIPE_PRICE_TEAM_MONTHLY!,
       'team-annual': process.env.STRIPE_PRICE_TEAM_ANNUAL!,
       'enterprise-monthly': process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY!,
-      'enterprise-annual': process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL!
+      'enterprise-annual': process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL!,
     };
 
     const key = `${plan}-${annual ? 'annual' : 'monthly'}`;

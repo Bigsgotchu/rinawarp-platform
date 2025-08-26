@@ -1,8 +1,10 @@
-import axios, { AxiosStatic } from 'axios';
-type AxiosInstance = ReturnType<AxiosStatic['create']>;
-type AxiosError = Error & { response?: { status: number; data: any } };
-type AxiosRequestConfig = Parameters<AxiosStatic['create']>[0];
-type AxiosResponse<T = any> = { data: T, status: number, headers: Record<string, string> };
+import axios from 'axios';
+import type {
+  AxiosInstance,
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 import { env } from '../config/env';
 import logger from '../utils/logger';
 
@@ -23,8 +25,9 @@ export class ApiClient {
   protected client: AxiosInstance;
   protected apiKey: string | null = null;
 
-  protected constructor(baseURL?: string) {
+  private constructor(baseURL?: string) {
     this.client = axios.create({
+      // @ts-ignore: Type mismatch with axios.create return type
       baseURL: baseURL || env.WEBSITE_API_URL,
       timeout: env.API_TIMEOUT,
       headers: {
@@ -86,7 +89,9 @@ export class ApiClient {
 
   public async get<T>(path: string, params?: Record<string, any>): Promise<T> {
     try {
-      const response = await this.client.get<T>(path, { params });
+      const response = await this.client.get<AxiosResponse<T>>(path, {
+        params,
+      });
       return response.data;
     } catch (error) {
       logger.error(`GET ${path} failed:`, error);
@@ -96,7 +101,7 @@ export class ApiClient {
 
   public async post<T>(path: string, data?: any): Promise<T> {
     try {
-      const response = await this.client.post<T>(path, data);
+      const response = await this.client.post<AxiosResponse<T>>(path, data);
       return response.data;
     } catch (error) {
       logger.error(`POST ${path} failed:`, error);
@@ -106,7 +111,7 @@ export class ApiClient {
 
   public async put<T>(path: string, data?: any): Promise<T> {
     try {
-      const response = await this.client.put<T>(path, data);
+      const response = await this.client.put<AxiosResponse<T>>(path, data);
       return response.data;
     } catch (error) {
       logger.error(`PUT ${path} failed:`, error);
@@ -116,7 +121,7 @@ export class ApiClient {
 
   public async delete<T>(path: string): Promise<T> {
     try {
-      const response = await this.client.delete<T>(path);
+      const response = await this.client.delete<AxiosResponse<T>>(path);
       return response.data;
     } catch (error) {
       logger.error(`DELETE ${path} failed:`, error);

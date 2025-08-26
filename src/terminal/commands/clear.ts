@@ -21,7 +21,7 @@ export class ClearCommand extends BaseCommand {
     command: TerminalCommand
   ): Promise<CommandResult> {
     TerminalSession.getInstance().clear();
-    
+
     return {
       output: '',
       exitCode: 0,

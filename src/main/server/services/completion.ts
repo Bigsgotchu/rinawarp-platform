@@ -9,10 +9,10 @@ import { CacheService } from './cache';
 const execAsync = promisify(exec);
 
 export interface CompletionContext {
-  command: string;     // Current command
-  cursorPos: number;   // Cursor position
-  line: string;        // Full line
-  cwd: string;        // Current working directory
+  command: string; // Current command
+  cursorPos: number; // Cursor position
+  line: string; // Full line
+  cwd: string; // Current working directory
   env?: NodeJS.ProcessEnv; // Environment variables
 }
 
@@ -108,10 +108,10 @@ export class CompletionService {
       switch (command) {
         case 'cd':
           return this.getDirectoryCompletions(partial, context.cwd);
-        
+
         case 'git':
           return this.getGitCompletions(partial, context);
-        
+
         default:
           return this.getFileCompletions(partial, context.cwd);
       }
@@ -124,9 +124,7 @@ export class CompletionService {
   /**
    * Get completions from PATH
    */
-  private async getPathCompletions(
-    partial: string
-  ): Promise<string[]> {
+  private async getPathCompletions(partial: string): Promise<string[]> {
     try {
       const cacheKey = `${this.cachePrefix}path:${partial}`;
       const cached = await this.cache.get<string[]>(cacheKey);
@@ -167,9 +165,7 @@ export class CompletionService {
     cwd: string
   ): Promise<CompletionResult> {
     try {
-      const path = partial.startsWith('/')
-        ? partial
-        : join(cwd, partial);
+      const path = partial.startsWith('/') ? partial : join(cwd, partial);
 
       const dir = dirname(path);
       const base = basename(path);
@@ -197,9 +193,7 @@ export class CompletionService {
     cwd: string
   ): Promise<CompletionResult> {
     try {
-      const path = partial.startsWith('/')
-        ? partial
-        : join(cwd, partial);
+      const path = partial.startsWith('/') ? partial : join(cwd, partial);
 
       const dir = dirname(path);
       const base = basename(path);
@@ -215,9 +209,7 @@ export class CompletionService {
       return {
         suggestions: files.map(f => f.name),
         displayType: 'detailed',
-        details: Object.fromEntries(
-          files.map(f => [f.name, f.type])
-        ),
+        details: Object.fromEntries(files.map(f => [f.name, f.type])),
       };
     } catch (error) {
       logger.error('Failed to get file completions:', error);
@@ -240,10 +232,10 @@ export class CompletionService {
         case 'checkout':
         case 'switch':
           return this.getGitBranchCompletions(partial, context.cwd);
-        
+
         case 'add':
           return this.getGitAddCompletions(partial, context.cwd);
-        
+
         default:
           return this.getGitCommandCompletions(partial);
       }
@@ -341,21 +333,18 @@ export class CompletionService {
   /**
    * Get alias completions
    */
-  private async getAliasCompletions(
-    partial: string
-  ): Promise<string[]> {
+  private async getAliasCompletions(partial: string): Promise<string[]> {
     try {
       // This would be populated from user preferences
       const aliases: Record<string, string> = {
         // Example aliases
-        'g': 'git',
-        'gc': 'git commit',
-        'gp': 'git push',
-        'll': 'ls -la',
+        g: 'git',
+        gc: 'git commit',
+        gp: 'git push',
+        ll: 'ls -la',
       };
 
-      return Object.keys(aliases)
-        .filter(a => a.startsWith(partial));
+      return Object.keys(aliases).filter(a => a.startsWith(partial));
     } catch (error) {
       logger.error('Failed to get alias completions:', error);
       return [];

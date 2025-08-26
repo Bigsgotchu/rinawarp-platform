@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import StripeService from '../services/stripe';
-import logger from '../minimal/logger';
+import logger from '../utils/logger';
 
 const prisma = new PrismaClient();
 const stripeService = StripeService.getInstance();
@@ -31,7 +31,9 @@ export const createSubscription = async (req: Request, res: Response) => {
     ]);
 
     if (!user || !tier) {
-      return res.status(404).json({ error: 'User or subscription tier not found' });
+      return res
+        .status(404)
+        .json({ error: 'User or subscription tier not found' });
     }
 
     const subscription = await stripeService.createSubscription(

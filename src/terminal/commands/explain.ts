@@ -63,7 +63,8 @@ Focus on practical understanding rather than theory unless specifically asked.`;
     super(
       {
         name: 'explain',
-        description: 'Get AI-powered explanations for code, errors, or concepts',
+        description:
+          'Get AI-powered explanations for code, errors, or concepts',
         category: 'ai',
         usage: 'explain <code|error|command|concept>',
         examples: [
