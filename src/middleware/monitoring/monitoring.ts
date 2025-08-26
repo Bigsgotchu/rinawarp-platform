@@ -109,39 +109,29 @@ export function healthCheck(
   };
 }
 
-// Common health checks
-export const databaseHealthCheck = healthCheck('database', async () => {
-  try {
-    const startTime = Date.now();
-    // Add your database check here
-    const duration = Date.now() - startTime;
+// Import health check implementations
+import {
+  checkDatabase,
+  checkRedis,
+  checkAIService,
+  checkSystemResources,
+  checkRateLimits,
+} from '../../services/monitoring/health-checks';
 
-    return {
-      healthy: true,
-      message: `Database responded in ${duration}ms`,
-    };
-  } catch (error) {
-    return {
-      healthy: false,
-      message: `Database check failed: ${error.message}`,
-    };
-  }
-});
+// Database health check
+export const databaseHealthCheck = healthCheck('database', checkDatabase);
 
-export const apiHealthCheck = healthCheck('api', async () => {
-  try {
-    const startTime = Date.now();
-    // Add your API check here
-    const duration = Date.now() - startTime;
+// Redis health check
+export const redisHealthCheck = healthCheck('redis', checkRedis);
 
-    return {
-      healthy: true,
-      message: `API responded in ${duration}ms`,
-    };
-  } catch (error) {
-    return {
-      healthy: false,
-      message: `API check failed: ${error.message}`,
-    };
-  }
-});
+// AI Service health check
+export const aiServiceHealthCheck = healthCheck('ai-service', checkAIService);
+
+// System resources health check
+export const systemResourcesHealthCheck = healthCheck(
+  'system-resources',
+  checkSystemResources
+);
+
+// Rate limits health check
+export const rateLimitsHealthCheck = healthCheck('rate-limits', checkRateLimits);

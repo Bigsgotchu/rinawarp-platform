@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: rinawarp
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        command:
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: redis-config
+          mountPath: /usr/local/etc/redis/redis.conf
+          subPath: redis.conf
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-config
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: rinawarp
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: rinawarp
+data:
+  redis.conf: |
+    maxmemory 1800mb
+    maxmemory-policy allkeys-lru
+    appendonly yes
+    appendfsync everysec
+    no-appendfsync-on-rewrite yes
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    save 900 1
+    save 300 10
+    save 60 10000
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    requirepass ${REDIS_PASSWORD}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: redis-backup
+  namespace: rinawarp
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: redis:7-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              redis-cli -h redis -a $REDIS_PASSWORD SAVE
+              cp /data/dump.rdb /backup/dump-$(date +%Y%m%d-%H%M%S).rdb
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: password
+            volumeMounts:
+            - name: redis-data
+              mountPath: /data
+              readOnly: true
+            - name: backup
+              mountPath: /backup
+          volumes:
+          - name: redis-data
+            persistentVolumeClaim:
+              claimName: redis-data-redis-0
+          - name: backup
+            persistentVolumeClaim:
+              claimName: redis-backup-pvc
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-backup-pvc
+  namespace: rinawarp
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

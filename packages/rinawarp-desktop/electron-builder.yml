@@ -1,0 +1,89 @@
+appId: com.rinawarptechnologies.rinawarp
+productName: RinaWarp
+copyright: Copyright © 2025 RinaWarp Technologies, LLC
+
+# Directories
+directories:
+  output: release
+  buildResources: assets
+
+# Files to include
+files:
+  - dist/**/*
+  - electron/**/*
+  - node_modules/**/*
+  - assets/**/*
+  - package.json
+
+# Additional resources
+extraResources:
+  - from: assets
+    to: assets
+
+# macOS configuration
+mac:
+  category: public.app-category.developer-tools
+  icon: assets/icons/generated/icon.icns
+  darkModeSupport: true
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: true  # Requires appropriate credentials in env
+
+# Windows configuration
+win:
+  icon: assets/icons/generated/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+# Linux configuration
+linux:
+  icon: assets/icons/generated
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: rpm
+      arch:
+        - x64
+  category: Development
+  maintainer: RinaWarp Technologies, LLC
+  vendor: RinaWarp Technologies, LLC
+
+# NSIS installer configuration
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: RinaWarp
+  uninstallDisplayName: RinaWarp
+  displayLanguageSelector: true
+
+# Publishing configuration
+publish:
+  provider: github
+  releaseType: release
+
+# Build configuration
+asar: true
+compression: maximum

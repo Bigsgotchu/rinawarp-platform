@@ -1,18 +1,18 @@
-import { TerminalApiClient } from '../../api/terminal';
-import { TerminalAuth } from '../../api/types';
-import { ApiError } from '../../api/client';
+import { TerminalApiClient } from '../../../api/terminal';
+import { TerminalAuth } from '../../../api/types';
+import { ApiError } from '../../../api/client';
 import {
   AuthCredentials,
   AuthOptions,
   AuthState,
   AuthEvents,
   TokenStorage,
-} from '../types';
-import { createStorage } from '../storage';
-import logger from '../../utils/logger';
+} from '../../types/auth/types';
+import { createStorage } from './storage';
+import logger from '../../../utils/logger';
 
 export class ClientAuthService {
-  private static instance: AuthService;
+  private static instance: ClientAuthService;
   private storage: TokenStorage;
   private refreshTimeout: NodeJS.Timeout | null = null;
   private state: AuthState = {
@@ -34,11 +34,11 @@ export class ClientAuthService {
     this.initializeFromStorage();
   }
 
-  public static getInstance(options?: AuthOptions): AuthService {
-    if (!AuthService.instance) {
-      AuthService.instance = new AuthService(options);
+  public static getInstance(options?: AuthOptions): ClientAuthService {
+    if (!ClientAuthService.instance) {
+      ClientAuthService.instance = new ClientAuthService(options);
     }
-    return AuthService.instance;
+    return ClientAuthService.instance;
   }
 
   private async initializeFromStorage(): Promise<void> {

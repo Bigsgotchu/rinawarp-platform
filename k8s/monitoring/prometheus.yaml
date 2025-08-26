@@ -1,0 +1,168 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: platform-monitor
+  namespace: rinawarp
+spec:
+  selector:
+    matchLabels:
+      app: platform
+  endpoints:
+  - port: http
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - rinawarp
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-alerts
+  namespace: rinawarp
+spec:
+  groups:
+  - name: platform
+    rules:
+    - alert: HighErrorRate
+      expr: |
+        sum(rate(request_error[5m])) / sum(rate(request_total[5m])) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: High error rate detected
+        description: Error rate is above 5% for the last 5 minutes.
+
+    - alert: HighLatency
+      expr: |
+        histogram_quantile(0.95, sum(rate(request_duration_ms_bucket[5m])) by (le)) > 1000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High latency detected
+        description: 95th percentile latency is above 1000ms.
+
+    - alert: HighMemoryUsage
+      expr: |
+        process_resident_memory_bytes > 1.5e9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High memory usage
+        description: Memory usage is above 1.5GB.
+
+    - alert: HighCPUUsage
+      expr: |
+        rate(process_cpu_seconds_total[5m]) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High CPU usage
+        description: CPU usage is above 80%.
+
+    - alert: DatabaseConnectionIssues
+      expr: |
+        pg_up != 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: Database connection issues
+        description: Unable to connect to the database.
+
+    - alert: RedisConnectionIssues
+      expr: |
+        redis_up != 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: Redis connection issues
+        description: Unable to connect to Redis.
+
+    - alert: HighAILatency
+      expr: |
+        histogram_quantile(0.95, sum(rate(ai_request_duration_ms_bucket[5m])) by (le)) > 2000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High AI request latency
+        description: 95th percentile AI request latency is above 2000ms.
+
+    - alert: HighRateLimit
+      expr: |
+        sum(rate(rate_limit_exceeded_total[5m])) > 100
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: High rate limiting
+        description: More than 100 requests/minute are being rate limited.
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: platform-alertmanager
+  namespace: rinawarp
+spec:
+  replicas: 1
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanager: platform
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: platform-alerts
+  namespace: rinawarp
+  labels:
+    alertmanager: platform
+spec:
+  route:
+    groupBy: ['alertname', 'cluster', 'service']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: 'slack-notifications'
+    routes:
+    - matchers:
+      - name: severity
+        value: critical
+      receiver: 'slack-critical'
+      groupWait: 10s
+  receivers:
+  - name: 'slack-notifications'
+    slackConfigs:
+    - apiURL:
+        key: url
+        name: slack-webhook
+      channel: '#monitoring'
+      title: '{{ template "slack.default.title" . }}'
+      text: '{{ template "slack.default.text" . }}'
+      sendResolved: true
+  - name: 'slack-critical'
+    slackConfigs:
+    - apiURL:
+        key: url
+        name: slack-webhook
+      channel: '#monitoring-critical'
+      title: '{{ template "slack.default.title" . }}'
+      text: '{{ template "slack.default.text" . }}'
+      sendResolved: true
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: platform-pods
+  namespace: rinawarp
+spec:
+  selector:
+    matchLabels:
+      app: platform
+  podMetricsEndpoints:
+  - port: metrics
