@@ -1,0 +1,157 @@
+@import "~@progress/kendo-theme-default/dist/all.scss";
+
+// Define our theme variables
+$kendo-theme-colors: (
+  "primary": #FF69B4,   // Hot Pink
+  "secondary": #FF7F50, // Coral
+  "info": #87CEEB,      // Light Blue
+  "success": #40E0D0,   // Teal
+  "warning": #FFD700,   // Yellow
+  "error": #FF1493,     // Deep Pink
+  "dark": #0A0A0A,
+  "light": #FFFFFF
+);
+
+// Color variants
+$kendo-theme-color-variations: (
+  "primary": (
+    "base": map-get($kendo-theme-colors, "primary"),
+    "hover": darken(map-get($kendo-theme-colors, "primary"), 10%),
+    "active": darken(map-get($kendo-theme-colors, "primary"), 15%),
+  ),
+  "secondary": (
+    "base": map-get($kendo-theme-colors, "secondary"),
+    "hover": darken(map-get($kendo-theme-colors, "secondary"), 10%),
+    "active": darken(map-get($kendo-theme-colors, "secondary"), 15%),
+  )
+);
+
+// Theme customization
+$theme-colors: map-merge($theme-colors, $kendo-theme-colors);
+$theme-color-variations: map-merge($theme-color-variations, $kendo-theme-color-variations);
+
+// Component overrides
+.k-button {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &.k-primary {
+    background: linear-gradient(
+      45deg,
+      map-get($kendo-theme-colors, "primary"),
+      map-get($kendo-theme-colors, "secondary")
+    );
+    border: none;
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(
+        45deg,
+        darken(map-get($kendo-theme-colors, "primary"), 10%),
+        darken(map-get($kendo-theme-colors, "secondary"), 10%)
+      );
+    }
+  }
+}
+
+.k-grid {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  .k-grid-header {
+    background: map-get($kendo-theme-colors, "dark");
+  }
+
+  .k-grid-toolbar {
+    background: linear-gradient(
+      to right,
+      map-get($kendo-theme-colors, "primary"),
+      map-get($kendo-theme-colors, "secondary")
+    );
+  }
+}
+
+.k-dropdown,
+.k-textbox,
+.k-datepicker {
+  border-radius: 8px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+
+  &:hover,
+  &:focus {
+    border-color: map-get($kendo-theme-colors, "primary");
+  }
+}
+
+.k-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  .k-dialog-titlebar {
+    background: linear-gradient(
+      to right,
+      map-get($kendo-theme-colors, "primary"),
+      map-get($kendo-theme-colors, "secondary")
+    );
+  }
+}
+
+.k-notification {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  &.k-notification-info {
+    background: map-get($kendo-theme-colors, "info");
+  }
+  
+  &.k-notification-success {
+    background: map-get($kendo-theme-colors, "success");
+  }
+  
+  &.k-notification-warning {
+    background: map-get($kendo-theme-colors, "warning");
+  }
+  
+  &.k-notification-error {
+    background: map-get($kendo-theme-colors, "error");
+  }
+}
+
+.k-menu {
+  background: transparent;
+
+  .k-menu-item {
+    border-radius: 6px;
+    margin: 0 2px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.k-state-selected {
+      background: rgba(255, 105, 180, 0.2);
+      color: map-get($kendo-theme-colors, "primary");
+    }
+  }
+}
+
+// Animation overrides
+.k-animation-container {
+  .k-animation-container-shown {
+    animation: k-animation-container-shown 0.3s ease-out;
+  }
+}
+
+@keyframes k-animation-container-shown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

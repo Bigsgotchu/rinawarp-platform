@@ -1,0 +1,3 @@
+#!/usr/bin/env node
+
+require('/Users/kgilley/Development/rinawarp-platform/packages/terminal/dist/index.js');

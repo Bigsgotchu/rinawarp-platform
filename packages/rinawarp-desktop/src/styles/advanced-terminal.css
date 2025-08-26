@@ -1,0 +1,346 @@
+:root {
+  @import './brand-colors.css';
+  /* Core Theme Colors */
+  --rinawarp-hot-pink: #FF69B4;
+  --rinawarp-coral: #FF7F50;
+  --rinawarp-teal: #40E0D0;
+  --rinawarp-light-blue: #ADD8E6;
+  
+  /* Advanced Theme Variables */
+  --terminal-bg: #0a0a0a;
+  --terminal-bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a1a1a 100%);
+  --terminal-text: #f8f8f2;
+  --terminal-glow: 0 0 10px rgba(255, 105, 180, 0.3);
+  --terminal-border: 1px solid rgba(255, 105, 180, 0.2);
+  
+  /* Animation Timings */
+  --animation-speed-fast: 0.3s;
+  --animation-speed-normal: 0.5s;
+  --animation-speed-slow: 1s;
+}
+
+.advanced-terminal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--terminal-bg-gradient);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: var(--terminal-glow);
+}
+
+/* Holographic Effect */
+.advanced-terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 105, 180, 0.1),
+    rgba(255, 127, 80, 0.1),
+    rgba(64, 224, 208, 0.1),
+    rgba(173, 216, 230, 0.1)
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: hologram 10s ease infinite;
+}
+
+/* Matrix Rain Effect */
+.matrix-rain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  z-index: 0;
+}
+
+.matrix-rain span {
+  color: var(--rinawarp-teal);
+  text-shadow: 0 0 5px var(--rinawarp-teal);
+  animation: matrix-rain var(--animation-speed-slow) linear infinite;
+}
+
+/* Command Line Interface */
+.cli-input {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+.cli-prompt {
+  color: var(--rinawarp-hot-pink);
+  margin-right: 8px;
+  font-weight: bold;
+  text-shadow: 0 0 5px var(--rinawarp-hot-pink);
+}
+
+.cli-input input {
+  background: transparent;
+  border: none;
+  color: var(--terminal-text);
+  font-family: inherit;
+  font-size: inherit;
+  width: 100%;
+  outline: none;
+}
+
+/* Command Output Styling */
+.command-output {
+  margin: 8px 0;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border-left: 2px solid var(--rinawarp-teal);
+}
+
+.output-success {
+  border-color: var(--rinawarp-teal);
+}
+
+.output-error {
+  border-color: var(--rinawarp-hot-pink);
+}
+
+.output-warning {
+  border-color: var(--rinawarp-coral);
+}
+
+/* Advanced Terminal Features */
+.terminal-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.terminal-tab {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px 6px 0 0;
+  color: var(--terminal-text);
+  cursor: pointer;
+  transition: all var(--animation-speed-fast);
+}
+
+.terminal-tab.active {
+  background: rgba(255, 105, 180, 0.2);
+  border-bottom: 2px solid var(--rinawarp-hot-pink);
+}
+
+/* Split Terminal */
+.terminal-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.terminal-split.vertical {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+/* Terminal Minimap */
+.terminal-minimap {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+/* Command Suggestions */
+.command-suggestions {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  border: var(--terminal-border);
+  border-radius: 6px;
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--animation-speed-fast);
+}
+
+.suggestion-item:hover {
+  background: rgba(255, 105, 180, 0.2);
+}
+
+.suggestion-item .match {
+  color: var(--rinawarp-hot-pink);
+  font-weight: bold;
+}
+
+/* Terminal Search */
+.terminal-search {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px;
+  border-radius: 20px;
+  border: var(--terminal-border);
+}
+
+.terminal-search input {
+  background: transparent;
+  border: none;
+  color: var(--terminal-text);
+  outline: none;
+  width: 200px;
+}
+
+/* Advanced Animations */
+@keyframes hologram {
+  0% {
+    opacity: 0.1;
+    transform: translateY(-1px);
+  }
+  50% {
+    opacity: 0.2;
+    transform: translateY(1px);
+  }
+  100% {
+    opacity: 0.1;
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes matrix-rain {
+  0% {
+    transform: translateY(-100%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* GPU Acceleration */
+.advanced-terminal * {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Command Palette */
+.command-palette {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  background: rgba(0, 0, 0, 0.95);
+  border-radius: 12px;
+  border: var(--terminal-border);
+  padding: 16px;
+  box-shadow: var(--terminal-glow);
+  z-index: 1000;
+}
+
+.command-palette input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--terminal-text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.command-palette-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all var(--animation-speed-fast);
+}
+
+.command-palette-item:hover {
+  background: rgba(255, 105, 180, 0.2);
+}
+
+.command-palette-item .icon {
+  margin-right: 8px;
+  color: var(--rinawarp-teal);
+}
+
+/* Status Bar */
+.terminal-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: var(--terminal-border);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--terminal-text);
+}
+
+.status-item .icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.status-item.success .icon {
+  background: var(--rinawarp-teal);
+}
+
+.status-item.error .icon {
+  background: var(--rinawarp-hot-pink);
+}
+
+/* Performance Optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .advanced-terminal::before {
+    animation: none;
+  }
+  
+  .matrix-rain {
+    display: none;
+  }
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  .command-palette,
+  .command-suggestions,
+  .terminal-search {
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.7);
+  }
+}

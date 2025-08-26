@@ -1,0 +1,22 @@
+{
+  "name": "@rinawarp/core",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "npx prisma generate --schema=../../prisma/schema.prisma && tsc -b",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "@rinawarp/shared": "file:../shared",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^5.0.0",
+    "@types/node": "^24.3.0",
+    "prisma": "5.22.0",
+    "typescript": "^5.2.2"
+  }
+}

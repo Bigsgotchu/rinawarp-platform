@@ -1,0 +1,53 @@
+:root {
+  /* Primary Colors */
+  --rinawarp-hot-pink: #FF69B4;     /* Hot Pink */
+  --rinawarp-coral: #FF7F50;        /* Coral */
+  --rinawarp-teal: #40E0D0;         /* Teal */
+  --rinawarp-light-blue: #87CEEB;   /* Light Blue */
+
+  /* Gradients */
+  --rinawarp-gradient-primary: linear-gradient(
+    135deg,
+    var(--rinawarp-hot-pink) 0%,
+    var(--rinawarp-coral) 35%,
+    var(--rinawarp-teal) 65%,
+    var(--rinawarp-light-blue) 100%
+  );
+
+  --rinawarp-gradient-accent: linear-gradient(
+    45deg,
+    var(--rinawarp-teal) 0%,
+    var(--rinawarp-light-blue) 50%,
+    var(--rinawarp-coral) 100%
+  );
+
+  /* Background Colors */
+  --rinawarp-bg-dark: #0a0a0a;
+  --rinawarp-bg-medium: #1a1a1a;
+  --rinawarp-bg-light: #2a2a2a;
+
+  /* Text Colors */
+  --rinawarp-text-primary: #ffffff;
+  --rinawarp-text-secondary: rgba(255, 255, 255, 0.7);
+  --rinawarp-text-disabled: rgba(255, 255, 255, 0.5);
+
+  /* Terminal Colors */
+  --rinawarp-terminal-black: #000000;
+  --rinawarp-terminal-red: var(--rinawarp-hot-pink);
+  --rinawarp-terminal-green: var(--rinawarp-teal);
+  --rinawarp-terminal-yellow: var(--rinawarp-coral);
+  --rinawarp-terminal-blue: var(--rinawarp-light-blue);
+  --rinawarp-terminal-magenta: var(--rinawarp-hot-pink);
+  --rinawarp-terminal-cyan: var(--rinawarp-teal);
+  --rinawarp-terminal-white: #ffffff;
+
+  /* Opacity Levels */
+  --rinawarp-opacity-low: 0.1;
+  --rinawarp-opacity-medium: 0.3;
+  --rinawarp-opacity-high: 0.8;
+
+  /* Animation Speeds */
+  --rinawarp-animation-slow: 1.5s;
+  --rinawarp-animation-medium: 0.8s;
+  --rinawarp-animation-fast: 0.3s;
+}
