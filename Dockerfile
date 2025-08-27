@@ -1,70 +1,48 @@
-FROM node:18-alpine AS builder
+# Use Node.js 20 Alpine as base for minimal image size
+FROM node:20-alpine
 
+# Set working directory for all subsequent operations
 WORKDIR /app
 
-# Install OpenSSL and other required build dependencies
-RUN apk add --no-cache openssl openssl-dev python3 make g++ curl
+# Install system dependencies required for node-gyp and other build tools
+# These are needed for building native modules and development tools
+RUN apk add --no-cache python3 make g++
 
-# Copy package files and install dependencies
+# Copy package.json files first to leverage Docker layer caching
+# This way, dependencies are only reinstalled if package.json changes
 COPY package*.json ./
-COPY packages/*/package*.json ./packages/
-RUN npm ci
+COPY packages/api/package*.json ./packages/api/
 
-# Copy prisma schema and environment variables
-COPY packages/api/prisma ./packages/api/prisma/
-COPY .env* ./
-COPY packages/api/.env* ./packages/api/
+# Install project dependencies
+# First install root dependencies (monorepo setup)
+# Then install API-specific dependencies
+RUN npm install
+RUN cd packages/api && npm install
 
-# Generate Prisma client in standard location
-RUN cd packages/api && \
-    DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" \
-    npx prisma generate --schema=./prisma/schema.prisma
+# Install TypeScript globally for build tools
+# This is required for the build process but not for production runtime
+RUN npm install -g typescript
 
-# Copy rest of the source code
+# Copy the rest of the application code
+# This is done after dependency installation to leverage caching
 COPY . .
 
-# Build packages
-RUN npm run build
-
-FROM node:18-alpine AS runner
-
-WORKDIR /app
-
-# Install runtime dependencies including OpenSSL
-RUN apk add --no-cache openssl
-
-# Copy runtime dependencies and generated Prisma client
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/api/node_modules ./packages/api/node_modules
-COPY --from=builder /app/packages/api/prisma ./packages/api/prisma
-
-# Regenerate Prisma client in standard location
+# Generate Prisma client and build TypeScript code
+# This creates the production-ready JavaScript in dist/
 RUN cd packages/api && \
-    DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" \
-    npx prisma generate --schema=./prisma/schema.prisma
+    npx prisma generate && \
+    npm run build
 
-# Copy package files and built files
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/packages/*/package*.json ./packages/
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/packages/*/dist ./packages/*/dist
+# Set working directory to the API package
+WORKDIR /app/packages/api
 
-# Create log directory and set permissions
-RUN mkdir -p /app/logs && chown -R node:node /app
-
-# Environment variables
+# Configure production environment
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Expose port
+# Document the port that the application listens on
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
-
-# Run as non-root
-USER node
-
-# Start application directly
-CMD ["node", "/app/dist/index.js"]
+# Start the application using the compiled JavaScript
+# We use the compiled code instead of ts-node for better performance
+CMD ["node", "dist/main.js"]
