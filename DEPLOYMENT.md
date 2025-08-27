@@ -115,9 +115,56 @@ If issues are detected:
      --region us-west-2
    ```
 
+## CI/CD Pipeline
+
+The application uses GitHub Actions for automated deployment to ECS. The pipeline is triggered on:
+- Push to main branch
+- Release tags (v*)
+
+### Pipeline Steps
+1. Build and test application
+2. Build Docker image
+3. Push to ECR
+4. Deploy to ECS
+5. Verify deployment
+
+### Required Secrets
+Add these secrets to your GitHub repository:
+- `AWS_ACCESS_KEY_ID`: AWS access key for ECR/ECS access
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key for ECR/ECS access
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
+
+## Stripe Integration
+
+### Webhook Configuration
+1. Set up webhook endpoint in Stripe Dashboard:
+   - URL: `https://your-domain.com/api/webhooks/stripe`
+   - Events to listen for:
+     - `customer.subscription.created`
+     - `customer.subscription.updated`
+     - `customer.subscription.deleted`
+     - `invoice.payment_succeeded`
+     - `invoice.payment_failed`
+
+2. Add the webhook secret to ECS task definition environment variables:
+   ```json
+   {
+     "name": "STRIPE_WEBHOOK_SECRET",
+     "value": "your_webhook_secret"
+   }
+   ```
+
+### Event Handling
+The application handles the following Stripe events:
+- Subscription lifecycle (created, updated, cancelled)
+- Payment processing (succeeded, failed)
+- Customer portal sessions
+
 ## Security Notes
 
 - ECR repository requires authentication
 - Ensure all secrets are properly configured in ECS task definitions
 - Use IAM roles with minimum required permissions
 - Keep Node.js and dependencies updated
+- Validate Stripe webhook signatures
+- Use environment variables for sensitive data
