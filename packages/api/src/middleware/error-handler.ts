@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '@rinawarp/shared';
 import { Prisma } from '@prisma/client';
-import { StripeError } from 'stripe';
+import Stripe from 'stripe';
 
-class APIError extends Error {
+export class APIError extends Error {
   constructor(
     public status: number,
     message: string,
@@ -31,7 +31,7 @@ function handlePrismaError(error: Prisma.PrismaClientKnownRequestError | Prisma.
   return new APIError(500, 'Internal server error', 'DATABASE_ERROR');
 }
 
-function handleStripeError(error: StripeError) {
+function handleStripeError(error: Stripe.errors.StripeError) {
   switch (error.type) {
     case 'StripeCardError':
       // Failed card payment
@@ -72,7 +72,7 @@ export function errorHandler(error: Error, req: Request, res: Response, next: Ne
     });
   }
 
-  if (error instanceof StripeError) {
+  if (error instanceof Stripe.errors.StripeError) {
     const apiError = handleStripeError(error);
     return res.status(apiError.status).json({
       error: {

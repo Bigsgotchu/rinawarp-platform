@@ -145,3 +145,101 @@ model LicenseKey {
   @@index([key])
   @@index([userId])
 }
+
+model Revenue {
+  id            String    @id @default(cuid())
+  amount        Float
+  currency      String    @default("usd")
+  type          RevenueType
+  status        RevenueStatus
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  subscription  UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String?
+  stripeInvoiceId String?
+  stripeChargeId  String?
+  metadata      Json?
+  refundedAmount Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id            String    @id @default(cuid())
+  amount        Float
+  currency      String    @default("usd")
+  type          TransactionType
+  status        TransactionStatus
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  description   String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  number        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  amount        Float
+  currency      String    @default("usd")
+  status        InvoiceStatus
+  dueDate       DateTime
+  paidAt        DateTime?
+  subscription  UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String?
+  stripeInvoiceId String?  @unique
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+enum RevenueType {
+  SUBSCRIPTION
+  ONE_TIME
+  USAGE
+  REFUND
+}
+
+enum RevenueStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  CHARGE
+  REFUND
+  CREDIT
+  DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}

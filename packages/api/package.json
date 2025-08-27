@@ -5,9 +5,10 @@
   "types": "dist/main.d.ts",
   "private": true,
   "scripts": {
-    "build": "prisma generate && tsc -b",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "start": "node dist/main.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^18.19.123",
     "prisma": "^5.22.0",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.2.2"
   }
 }

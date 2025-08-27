@@ -23,14 +23,7 @@ export const validateRequest = (schema: ValidateRequestSchema) => {
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
-        next(
-          new APIError(400, 'Validation error', {
-            errors: error.errors.map((e) => ({
-              path: e.path.join('.'),
-              message: e.message,
-            })),
-          })
-        );
+        next(new APIError(400, 'Validation error', 'VALIDATION_ERROR'));
       } else {
         next(error);
       }

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { StripeService } from '../../services/stripe.service';
+import { RevenueService } from '../../services/revenue.service';
 import { logger } from '@rinawarp/shared';
 import Stripe from 'stripe';
 
@@ -9,6 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 const stripeService = new StripeService();
+const revenueService = new RevenueService();
 
 router.post('/', async (req: any, res) => {
   const sig = req.headers['stripe-signature'];
@@ -38,7 +40,10 @@ router.post('/', async (req: any, res) => {
         await stripeService.handleSubscriptionDeleted(event);
         break;
       case 'invoice.payment_succeeded':
-        await stripeService.handleInvoiceSucceeded(event);
+        await Promise.all([
+          stripeService.handleInvoiceSucceeded(event),
+          revenueService.recordPayment(event.data.object as Stripe.Invoice)
+        ]);
         break;
       case 'invoice.payment_failed':
         await stripeService.handleInvoiceFailed(event);

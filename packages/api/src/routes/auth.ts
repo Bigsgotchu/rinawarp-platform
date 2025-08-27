@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthService } from '../services/auth.service';
-import { authenticate } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { z } from 'zod';
 
@@ -54,9 +54,11 @@ router.post('/refresh', validateRequest({ body: refreshSchema }), async (req, re
   }
 });
 
-router.post('/logout', authenticate, async (req, res, next) => {
+import type { AuthRequest } from '../middleware/auth';
+
+router.post('/logout', requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    await authService.logout(req.user!.userId);
+await authService.logout(req.user!.id);
     res.status(204).send();
   } catch (error) {
     next(error);

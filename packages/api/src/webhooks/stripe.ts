@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { logger } from '@rinawarp/shared';
 import { StripeService } from '../services/stripe.service';
+import { RevenueService } from '../services/revenue.service';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -8,6 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 const stripeService = new StripeService();
+const revenueService = new RevenueService();
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function stripeWebhookHandler(req: Request, res: Response): Promise<Response> {
@@ -37,7 +39,10 @@ export async function stripeWebhookHandler(req: Request, res: Response): Promise
         break;
 
       case 'invoice.payment_succeeded':
-        await stripeService.handleInvoiceSucceeded(event);
+        await Promise.all([
+          stripeService.handleInvoiceSucceeded(event),
+          revenueService.recordPayment(event.data.object as Stripe.Invoice)
+        ]);
         break;
 
       case 'invoice.payment_failed':

@@ -21,6 +21,24 @@ model User {
   licenseKeys      LicenseKey[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  revenue          Revenue[]
+}
+
+model Revenue {
+  id              String    @id @default(cuid())
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  amount          Int
+  currency        String
+  status          String
+  stripeInvoiceId String    @unique
+  paidAt          DateTime
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([paidAt])
 }
 
 model SubscriptionTier {

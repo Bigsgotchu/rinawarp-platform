@@ -25,38 +25,23 @@ router.post('/stripe', async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET || ''
     );
 
+    logger.info('Processing Stripe webhook event:', { type: event.type, id: event.id });
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        {
-          const subscription = event.data.object as Stripe.Subscription;
-          await subscriptionService.handleSubscriptionUpdate(subscription);
-        }
+        await subscriptionService.handleWebhookEvent(event);
         break;
 
       case 'customer.subscription.deleted':
-        {
-          const subscription = event.data.object as Stripe.Subscription;
-          await subscriptionService.handleSubscriptionCancellation(subscription);
-        }
+        await subscriptionService.handleWebhookEvent(event);
         break;
 
       case 'invoice.payment_succeeded':
-        {
-          const invoice = event.data.object as Stripe.Invoice;
-          if (invoice.subscription) {
-            await subscriptionService.handleSuccessfulPayment(invoice);
-          }
-        }
+        await subscriptionService.handleWebhookEvent(event);
         break;
 
       case 'invoice.payment_failed':
-        {
-          const invoice = event.data.object as Stripe.Invoice;
-          if (invoice.subscription) {
-            await subscriptionService.handleFailedPayment(invoice);
-          }
-        }
+        await subscriptionService.handleWebhookEvent(event);
         break;
 
       default:

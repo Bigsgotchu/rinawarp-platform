@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { UsageService } from '../services/usage.service';
-import { authenticate } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { z } from 'zod';
+
+import type { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const usageService = new UsageService();
@@ -14,9 +16,9 @@ const dateRangeSchema = z.object({
 });
 
 // Routes
-router.get('/current', authenticate, async (req, res, next) => {
+router.get('/current', requireAuth, async (req: AuthRequest, res, next) => {
   try {
-    const usage = await usageService.getCurrentPeriodUsage(req.user!.userId);
+    const usage = await usageService.getCurrentPeriodUsage(req.user!.id);
     res.json(usage);
   } catch (error) {
     next(error);
@@ -25,13 +27,13 @@ router.get('/current', authenticate, async (req, res, next) => {
 
 router.get(
   '/history',
-  authenticate,
+  requireAuth,
   validateRequest({ query: dateRangeSchema }),
-  async (req, res, next) => {
+  async (req: AuthRequest, res, next) => {
     try {
       const { startDate, endDate } = req.query as unknown as z.infer<typeof dateRangeSchema>;
       const history = await usageService.getUsageHistory(
-        req.user!.userId,
+        req.user!.id,
         startDate,
         endDate
       );

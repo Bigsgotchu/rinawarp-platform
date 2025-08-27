@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { StripeCheckoutService } from '../services/stripe-checkout.service';
 import { z } from 'zod';
+
+import type { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -18,13 +20,13 @@ const customerPortalSchema = z.object({
 
 router.post(
   '/create-checkout-session',
-  authenticate,
+  requireAuth,
   validateRequest({ body: checkoutSessionSchema }),
-  async (req, res, next) => {
+  async (req: AuthRequest, res, next) => {
     try {
       const { tierId, successUrl, cancelUrl } = req.body;
       const session = await StripeCheckoutService.getInstance().createCheckoutSession(
-        req.user!.userId,
+        req.user!.id,
         tierId,
         successUrl,
         cancelUrl
@@ -38,13 +40,13 @@ router.post(
 
 router.post(
   '/create-portal-session',
-  authenticate,
+  requireAuth,
   validateRequest({ body: customerPortalSchema }),
-  async (req, res, next) => {
+  async (req: AuthRequest, res, next) => {
     try {
       const { returnUrl } = req.body;
       const session = await StripeCheckoutService.getInstance().createCustomerPortalSession(
-        req.user!.userId,
+        req.user!.id,
         returnUrl
       );
       res.json({ url: session.url });
