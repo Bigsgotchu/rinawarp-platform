@@ -67,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 USER node
 
 # Start application directly
-CMD ["node", "dist/server.js"]
+CMD ["node", "/app/dist/index.js"]

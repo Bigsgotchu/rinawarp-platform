@@ -17,6 +17,11 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
   })
 }
 
+resource "random_password" "redis_auth_token" {
+  length  = 32
+  special = false
+}
+
 resource "random_password" "jwt_secret" {
   length  = 32
   special = true
@@ -33,12 +38,12 @@ resource "random_password" "redis_password" {
 }
 
 # SSM Parameters for non-sensitive configuration
+# Non-Redis SSM parameters
 resource "aws_ssm_parameter" "app_config" {
   for_each = {
     "HOST"                    = "0.0.0.0"
     "PORT"                    = "3000"
     "NODE_ENV"               = "production"
-    "REDIS_URL"              = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:${aws_elasticache_cluster.redis.port}"
     "REDIS_TLS"              = "true"
     "DB_SSL"                 = "true"
     "DB_MAX_CONNECTIONS"     = "20"
@@ -54,6 +59,20 @@ resource "aws_ssm_parameter" "app_config" {
   name  = "/rinawarp/config/${each.key}"
   type  = "String"
   value = each.value
+  tags = {
+    Environment = "prod"
+    Name        = "rinawarp-config"
+  }
+}
+
+# Redis URL SSM parameter with null safety
+resource "aws_ssm_parameter" "redis_url" {
+  count = try(coalesce(aws_elasticache_replication_group.redis.primary_endpoint_address), "") != "" ? 1 : 0
+
+  name  = "/rinawarp/config/REDIS_URL"
+  type  = "String"
+  value = "rediss://:${random_password.redis_auth_token.result}@${aws_elasticache_replication_group.redis.primary_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
+  
   tags = {
     Environment = "prod"
     Name        = "rinawarp-config"

@@ -128,6 +128,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name      = "REDIS_PASSWORD"
           valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:REDIS_PASSWORD::"
+        },
+        {
+          name      = "STRIPE_SECRET_KEY"
+          valueFrom = "/rinawarp/config/STRIPE_SECRET_KEY"
         }
       ]
 
@@ -178,7 +182,7 @@ resource "aws_ecs_service" "app" {
     container_port   = 3000
   }
 
-  depends_on = [aws_lb_listener.app]
+  depends_on = [aws_lb_listener.https]
 
   deployment_circuit_breaker {
     enable   = true
@@ -192,6 +196,49 @@ resource "aws_ecs_service" "app" {
   tags = {
     Environment = "prod"
     Name        = "rinawarp-service"
+  }
+}
+
+# Application Auto Scaling for ECS Service
+resource "aws_appautoscaling_target" "ecs_service" {
+  max_capacity       = 6
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "ecs_cpu_target" {
+  name               = "${var.project_name}-ecs-cpu-target"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = 60
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
+  }
+}
+
+resource "aws_appautoscaling_policy" "ecs_memory_target" {
+  name               = "${var.project_name}-ecs-mem-target"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value       = 70
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
   }
 }
 
@@ -219,25 +266,4 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# Load balancer listener
-resource "aws_lb_listener" "app" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
 
-default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
-}
-
-# Add ALB ingress rule to app security group
-resource "aws_security_group_rule" "app_from_alb" {
-  type                     = "ingress"
-  from_port                = 3000
-  to_port                  = 3000
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.alb.id
-  security_group_id        = aws_security_group.app.id
-  description              = "Allow inbound traffic from ALB"
-}

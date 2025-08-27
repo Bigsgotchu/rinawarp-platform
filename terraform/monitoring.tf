@@ -65,7 +65,81 @@ resource "aws_cloudwatch_metric_alarm" "redis_cpu" {
   alarm_actions       = [aws_sns_topic.alerts.arn]
 
   dimensions = {
-    CacheClusterId = aws_elasticache_cluster.redis.id
+    ReplicationGroupId = aws_elasticache_replication_group.redis.id
+  }
+}
+
+# ECS Service CPU Alarm
+resource "aws_cloudwatch_metric_alarm" "ecs_cpu_high" {
+  alarm_name          = "${var.project_name}-ecs-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "ECS service CPU high"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.app.name
+  }
+}
+
+# ECS Service Memory Alarm
+resource "aws_cloudwatch_metric_alarm" "ecs_memory_high" {
+  alarm_name          = "${var.project_name}-ecs-memory-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "ECS service memory high"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    ClusterName = aws_ecs_cluster.main.name
+    ServiceName = aws_ecs_service.app.name
+  }
+}
+
+# ALB 4XX Alarm
+resource "aws_cloudwatch_metric_alarm" "alb_4xx" {
+  alarm_name          = "${var.project_name}-alb-4xx"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "HTTPCode_Target_4XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 100
+  alarm_description   = "High 4XX at ALB"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    LoadBalancer = aws_lb.main.arn_suffix
+  }
+}
+
+# ALB 5XX Alarm
+resource "aws_cloudwatch_metric_alarm" "alb_5xx" {
+  alarm_name          = "${var.project_name}-alb-5xx"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "HTTPCode_Target_5XX_Count"
+  namespace           = "AWS/ApplicationELB"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 20
+  alarm_description   = "High 5XX at ALB"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    LoadBalancer = aws_lb.main.arn_suffix
   }
 }
 

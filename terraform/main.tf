@@ -1,21 +1,4 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-  
-  backend "s3" {
-    bucket = "rinawarp-terraform-state"
-    key    = "prod/terraform.tfstate"
-    region = "us-west-2"
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
+# Provider configuration moved to providers.tf
 
 # RDS Instance
 resource "aws_db_instance" "postgres" {
@@ -43,14 +26,32 @@ resource "aws_db_instance" "postgres" {
 }
 
 # ElastiCache Redis
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.project_name}-redis"
+resource "aws_elasticache_replication_group" "redis" {
+  replication_group_id = "${var.project_name}-redis-rg"
+  description          = "Redis cluster for ${var.project_name}"
   engine              = "redis"
+  engine_version      = "7.1"
   node_type           = var.redis_node_type
-  num_cache_nodes     = 1
   port                = 6379
+  num_cache_clusters  = 2  # Primary + 1 replica
+
   security_group_ids  = [aws_security_group.redis.id]
   subnet_group_name   = aws_elasticache_subnet_group.main.name
+
+  snapshot_retention_limit = 7
+  snapshot_window         = "05:00-09:00"
+  maintenance_window      = "mon:10:00-mon:11:00"
+
+  parameter_group_name = "default.redis7"
+
+  automatic_failover_enabled = true
+  auto_minor_version_upgrade = true
+  multi_az_enabled           = true
+  apply_immediately          = true
+
+  transit_encryption_enabled = true
+  at_rest_encryption_enabled = true
+  auth_token                = random_password.redis_auth_token.result
 
   tags = {
     Name = "${var.project_name}-redis"
@@ -81,9 +82,44 @@ resource "aws_lb" "main" {
   security_groups    = [aws_security_group.alb.id]
   subnets           = aws_subnet.public[*].id
 
+  drop_invalid_header_fields = true
+  enable_deletion_protection = true
+  enable_http2              = true
+
   tags = {
     Name = "${var.project_name}-alb"
     Environment = var.environment
+  }
+}
+
+# HTTPS Listener
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = aws_acm_certificate.main.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+
+# HTTP to HTTPS Redirect
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
@@ -108,6 +144,25 @@ resource "aws_s3_bucket" "app_storage" {
   }
 }
 
+# Block Public Access for S3 bucket
+resource "aws_s3_bucket_public_access_block" "app_storage" {
+  bucket                  = aws_s3_bucket.app_storage.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable S3 Bucket Server-Side Encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "app_storage" {
+  bucket = aws_s3_bucket.app_storage.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # Enable S3 Bucket Versioning
 resource "aws_s3_bucket_versioning" "app_storage" {
   bucket = aws_s3_bucket.app_storage.id
@@ -128,13 +183,13 @@ resource "aws_route53_zone" "main" {
 
 # SSL Certificate
 resource "aws_acm_certificate" "main" {
-  domain_name       = var.domain_name
+  domain_name       = "rinawarptech.com"
   validation_method = "DNS"
 
-  subject_alternative_names = ["*.${var.domain_name}"]
+  subject_alternative_names = ["*.rinawarptech.com"]
 
   tags = {
-    Name = "${var.project_name}-cert"
+    Name        = "rinawarp-cert"
     Environment = var.environment
   }
 
@@ -143,29 +198,7 @@ resource "aws_acm_certificate" "main" {
   }
 }
 
-# Certificate Validation
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.main.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = aws_route53_zone.main.zone_id
-}
-
-# Certificate Validation Completion
-resource "aws_acm_certificate_validation" "main" {
-  certificate_arn         = aws_acm_certificate.main.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-}
+# Certificate validation has been moved to a separate step
 
 # DNS Records for Application
 resource "aws_route53_record" "app" {

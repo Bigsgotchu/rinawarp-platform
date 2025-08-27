@@ -1,0 +1,245 @@
+variable "project_name" {
+  description = "The name of the project"
+  type        = string
+  default     = "rinawarp"
+}
+
+variable "environment" {
+  description = "The deployment environment"
+  type        = string
+  default     = "production"
+}
+
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
+  default     = "us-west-2"
+}
+
+variable "domain_name" {
+  description = "The domain name for the application"
+  type        = string
+  default     = "rinawarptech.com"
+}
+
+variable "db_instance_class" {
+  description = "The instance class for the RDS instance"
+  type        = string
+  default     = "db.t3.medium"
+}
+
+variable "redis_node_type" {
+  description = "The node type for the Redis cluster"
+  type        = string
+  default     = "cache.t3.medium"
+}
+
+variable "vpc_cidr" {
+  description = "The CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "db_name" {
+  description = "The name of the database"
+  type        = string
+  default     = "rinawarp_prod"
+}
+
+variable "db_username" {
+  description = "The username for the database"
+  type        = string
+  default     = "rinawarp_admin"
+}
+
+variable "db_password" {
+  description = "The password for the database"
+  type        = string
+  sensitive   = true
+}
+
+variable "enable_monitoring" {
+  description = "Whether to enable monitoring"
+  type        = bool
+  default     = true
+}
+
+variable "retention_days" {
+  description = "Number of days to retain logs"
+  type        = number
+  default     = 30
+}
+
+variable "desired_count" {
+  description = "The desired number of instances of the task definition"
+  type        = number
+  default     = 3
+}
+
+variable "health_check_path" {
+  description = "Path for health check"
+  type        = string
+  default     = "/health"
+}
+
+variable "public_subnets" {
+  description = "List of public subnet CIDR blocks"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+}
+
+variable "private_subnets" {
+  description = "List of private subnet CIDR blocks"
+  type        = list(string)
+  default     = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
+}
+
+variable "container_memory" {
+  description = "The amount (in MiB) of memory to present to the container"
+  type        = number
+  default     = 2048
+}
+
+variable "container_cpu" {
+  description = "The number of cpu units to reserve for the container"
+  type        = number
+  default     = 1024
+}
+
+variable "min_capacity" {
+  description = "Minimum number of tasks"
+  type        = number
+  default     = 3
+}
+
+variable "max_capacity" {
+  description = "Maximum number of tasks"
+  type        = number
+  default     = 10
+}
+
+  description = "Name of the project"
+  type        = string
+  default     = "rinawarp"
+
+  description = "Environment (prod, staging, dev)"
+  type        = string
+  default     = "prod"
+
+  description = "AWS region to deploy to"
+  type        = string
+  default     = "us-west-2"
+
+  description = "Domain name for the application"
+  type        = string
+  default     = "rinawarp.com"
+
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.medium"
+
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t3.medium"
+
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+
+  description = "Name of the database"
+  type        = string
+  default     = "rinawarp"
+
+  description = "Database master username"
+  type        = string
+  default     = "rinawarp_admin"
+
+  description = "Database master password"
+  type        = string
+  sensitive   = true
+
+  description = "Port exposed by the docker image"
+  type        = number
+  default     = 3000
+
+  description = "CPU units for the container"
+  type        = number
+  default     = 256
+
+  description = "Memory limit for the container"
+  type        = number
+  default     = 512
+
+  description = "Number of ECS tasks to run"
+  type        = number
+  default     = 2
+
+  description = "Path for health check"
+  type        = string
+  default     = "/api/health"
+
+  description = "Name of the project"
+  type        = string
+  default     = "rinawarp"
+
+  description = "Environment (e.g., prod, staging)"
+  type        = string
+  default     = "prod"
+
+  description = "AWS region"
+  type        = string
+  default     = "us-west-2"
+
+  description = "CIDR block for VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+
+  description = "List of availability zones"
+  type        = list(string)
+  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.medium"
+
+  description = "Database name"
+  type        = string
+  default     = "rinawarp"
+
+  description = "Database username"
+  type        = string
+  sensitive   = true
+
+  description = "Database password"
+  type        = string
+  sensitive   = true
+
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t3.micro"
+
+  description = "Domain name for the application"
+  type        = string
+
+  description = "Enable NAT Gateway for private subnets"
+  type        = bool
+  default     = true
+
+  description = "Enable Container Insights for ECS"
+  type        = bool
+  default     = true
+
+  description = "ARN of SSL certificate for ALB"
+  type        = string
+
+  description = "Port exposed by the application"
+  type        = number
+  default     = 3000
+
+  description = "Desired count of application containers"
+  type        = number
+  default     = 2
+
+  description = "Path for ALB health check"
+  type        = string
+  default     = "/health"
