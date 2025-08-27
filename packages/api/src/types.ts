@@ -1,17 +1,9 @@
-import { Request } from 'express';
-import { AuthPayload } from '@rinawarp/shared';
-
-export interface AuthRequest extends Request {
-  user?: AuthPayload;
-}
+import { CorsOptions } from 'cors';
 
 export interface APIOptions {
   port: number;
   host: string;
-  enableMetrics?: boolean;
-  enableDocs?: boolean;
-  cors?: {
-    origin: string | string[];
-    credentials: boolean;
-  };
+  enableDocs: boolean;
+  enableMetrics: boolean;
+  cors: CorsOptions;
 }

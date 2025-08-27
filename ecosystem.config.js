@@ -1,6 +1,28 @@
 module.exports = {
   apps: [
     {
+      name: 'rinawarp-api',
+      script: './packages/api/dist/main.js',
+      instances: 'max',
+      exec_mode: 'cluster',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'development',
+        PORT: 3000
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      },
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      error_file: 'logs/api-error.log',
+      out_file: 'logs/api-out.log',
+      time: true
+    },
+    {
       name: 'rinawarp',
       script: './dist/index.js',
       instances: 'max',

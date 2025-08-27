@@ -91,6 +91,66 @@ export const getCurrentSubscription = async (req: Request, res: Response) => {
   }
 };
 
+export const createCustomerPortalSession = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user?.stripeCustomerId) {
+      return res.status(404).json({ error: 'No customer found' });
+    }
+
+    const session = await stripeService.createPortalSession(user.stripeCustomerId);
+    res.json({ url: session.url });
+  } catch (error) {
+    logger.error('Failed to create portal session:', error);
+    res.status(500).json({ error: 'Failed to create portal session' });
+  }
+};
+
+export const updateSubscription = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { tierId } = req.body;
+
+    const [user, tier] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        include: { subscription: true },
+      }),
+      prisma.subscriptionTier.findUnique({ where: { id: tierId } }),
+    ]);
+
+    if (!user?.subscription || !tier) {
+      return res.status(404).json({ error: 'Subscription or tier not found' });
+    }
+
+    const updatedSubscription = await stripeService.updateSubscription(
+      user.subscription.stripeSubscriptionId,
+      tier.stripePriceId!
+    );
+
+    res.json(updatedSubscription);
+  } catch (error) {
+    logger.error('Failed to update subscription:', error);
+    res.status(500).json({ error: 'Failed to update subscription' });
+  }
+};
+
+export const handleWebhook = async (req: Request, res: Response) => {
+  try {
+    const signature = req.headers['stripe-signature'] as string;
+    await stripeService.handleWebhook(req.body, signature);
+    res.json({ received: true });
+  } catch (error) {
+    logger.error('Failed to handle webhook:', error);
+    res.status(400).json({ error: 'Webhook signature verification failed' });
+  }
+};
+
 export const getUsageStats = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id; // Auth middleware attaches user

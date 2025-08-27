@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: rinawarp-staging
+spec:
+  schedule: "0 1 * * *"  # Run at 1 AM every day
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:14-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              BACKUP_FILE="/backups/backup-$(date +%Y%m%d-%H%M%S).sql"
+              pg_dump -h postgresql -U $POSTGRES_USER -d $POSTGRES_DB -Fc > "$BACKUP_FILE"
+              gzip "$BACKUP_FILE"
+              # Clean old backups (older than 7 days)
+              find /backups -type f -mtime +7 -delete
+            envFrom:
+            - secretRef:
+                name: database-credentials
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-storage
+  namespace: rinawarp-staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

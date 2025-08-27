@@ -1,0 +1,27 @@
+{
+  "stripe": {
+    "webhookSecret": "your_production_webhook_secret",
+    "apiKey": "your_production_secret_key",
+    "publicKey": "your_production_public_key"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "allowedOrigins": [
+      "https://app.your-domain.com",
+      "https://your-domain.com"
+    ]
+  },
+  "database": {
+    "url": "postgresql://user:password@your-db-host:5432/rinawarp?schema=public"
+  },
+  "security": {
+    "jwtSecret": "your_jwt_secret",
+    "tokenExpiryMinutes": 15,
+    "refreshTokenExpiryDays": 7,
+    "rateLimiting": {
+      "windowMs": 15 * 60 * 1000,
+      "max": 100
+    }
+  }
+}

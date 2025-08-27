@@ -1,0 +1,11 @@
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: platform-tg
+  namespace: rinawarp-staging
+spec:
+  serviceRef:
+    name: platform
+    port: 80
+  targetType: instance
+  targetGroupARN: arn:aws:elasticloadbalancing:us-west-2:720237151757:targetgroup/platform-staging/64843b5a01103e72

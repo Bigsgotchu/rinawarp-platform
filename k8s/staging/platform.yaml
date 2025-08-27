@@ -37,10 +37,12 @@ spec:
     spec:
       containers:
       - name: platform
-        image: ${GHCR_IMAGE}
+        image: 720237151757.dkr.ecr.us-west-2.amazonaws.com/rinawarp/platform:latest
         imagePullPolicy: Always
+        command: ["node", "dist/server.js"]
         ports:
         - containerPort: 3000
+          name: http
         envFrom:
         - configMapRef:
             name: platform-config

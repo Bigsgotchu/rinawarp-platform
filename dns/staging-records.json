@@ -1,0 +1,31 @@
+{
+  "Comment": "Create DNS records for staging environment",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "staging.rinawarptech.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "rinawarp-alb-1373868117.us-west-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "staging-api.rinawarptech.com",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "rinawarp-alb-1373868117.us-west-2.elb.amazonaws.com"
+          }
+        ]
+      }
+    }
+  ]
+}

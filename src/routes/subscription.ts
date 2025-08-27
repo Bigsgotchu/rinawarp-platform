@@ -5,6 +5,9 @@ import {
   cancelSubscription,
   getCurrentSubscription,
   getUsageStats,
+  updateSubscription,
+  createCustomerPortalSession,
+  handleWebhook,
 } from '../controllers/subscription';
 import authenticate from '../middleware/auth';
 import { trackUsage } from '../middleware/usage-tracking';
@@ -29,5 +32,14 @@ router.get(
   getCurrentSubscription
 );
 router.get('/usage', trackUsage(UsageType.API_REQUEST), getUsageStats);
+
+// Customer portal
+router.post('/portal-session', trackUsage(UsageType.API_REQUEST), createCustomerPortalSession);
+
+// Update subscription
+router.put('/update', trackUsage(UsageType.API_REQUEST), updateSubscription);
+
+// Stripe webhook
+router.post('/webhook', express.raw({ type: 'application/json' }), handleWebhook);
 
 export default router;
