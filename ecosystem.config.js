@@ -1,8 +1,10 @@
 module.exports = {
   apps: [
     {
-      name: 'rinawarp-api',
+name: 'rinawarp-api',
       script: './packages/api/dist/main.js',
+      interpreter: 'node',
+      interpreter_args: '-r ./scripts/load-secrets.js',
       instances: 'max',
       exec_mode: 'cluster',
       autorestart: true,
@@ -23,8 +25,10 @@ module.exports = {
       time: true
     },
     {
-      name: 'rinawarp',
+name: 'rinawarp',
       script: './dist/index.js',
+      interpreter: 'node',
+      interpreter_args: '-r ./scripts/load-secrets.js',
       instances: 'max',
       exec_mode: 'cluster',
       autorestart: true,
@@ -43,8 +47,10 @@ module.exports = {
       },
     },
     {
-      name: 'rinawarp-worker',
+name: 'rinawarp-worker',
       script: './dist/worker.js',
+      interpreter: 'node',
+      interpreter_args: '-r ./scripts/load-secrets.js',
       instances: 2,
       exec_mode: 'cluster',
       autorestart: true,

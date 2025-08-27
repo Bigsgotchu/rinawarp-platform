@@ -17,7 +17,7 @@ resource "aws_db_instance" "postgres" {
 
   backup_retention_period = 7
   multi_az               = true
-  skip_final_snapshot    = false
+  skip_final_snapshot    = true
 
   tags = {
     Name = "${var.project_name}-db"

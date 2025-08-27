@@ -9,7 +9,7 @@ enable_nat_gateway  = true
 
 # Database configuration
 db_instance_class = "db.t3.medium"
-db_name          = "rinawarp"
+db_name          = "rinawarp_prod"
 db_username      = "rinawarp_admin"
 # db_password to be provided via environment variable TF_VAR_db_password
 
