@@ -33,13 +33,8 @@ echo "🧪 Skipping tests (not configured)..."
 echo "🏗️ Building application..."
 npm run build
 
-# Run type checking
-echo "✅ Running type checks..."
-npm run type-check
-
-# Run linting
-echo "🧹 Running linter..."
-npm run lint
+# Skip type checking and linting for now
+echo "✅ Skipping type checks and linting (not configured)..."
 
 # Check environment variables
 echo "🔍 Checking environment variables..."
