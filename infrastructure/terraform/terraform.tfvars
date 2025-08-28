@@ -1,6 +1,6 @@
 aws_region = "us-west-2"
 environment = "eks-prod"
-domain_name = "rinawarp.com"
+domain_name = "rinawarptech.com"
 
 rds_instance_type = "db.t3.small"
 rds_storage_size = 50
