@@ -54,6 +54,11 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
+// Test route for rate limiting
+app.get('/_rltest', (_req: Request, res: Response) => {
+  res.json({ message: 'Rate limit test endpoint' });
+});
+
 // Error handling
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   logger.error('Server error:', err);
