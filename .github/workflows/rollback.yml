@@ -1,0 +1,169 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version to rollback to'
+        required: true
+        type: string
+      components:
+        description: 'Components to rollback (comma-separated)'
+        required: true
+        type: choice
+        options:
+          - all
+          - api
+          - web
+          - desktop-app
+
+env:
+  ELECTRON_VERSION: 28.1.0
+  NODE_VERSION: 20.x
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      previous_version: ${{ steps.get_previous.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous version details
+        id: get_previous
+        run: |
+          if [[ "${{ github.event.inputs.version }}" == "previous" ]]; then
+            CURRENT=$(git describe --tags --abbrev=0)
+            PREVIOUS=$(git describe --tags --abbrev=0 --always $(git rev-list --tags --skip=1 --max-count=1))
+            echo "version=$PREVIOUS" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+  rollback-desktop:
+    needs: prepare
+    if: ${{ github.event.inputs.components == 'all' || github.event.inputs.components == 'desktop-app' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Download previous version artifacts
+        run: |
+          for platform in macos windows linux; do
+            aws s3 cp s3://downloads.${{ github.event.inputs.environment }}.rinawarptech.com/RinaWarp-${{ needs.prepare.outputs.previous_version }}.$${platform} ./
+          done
+
+      - name: Upload as latest
+        run: |
+          for platform in macos windows linux; do
+            aws s3 cp RinaWarp-${{ needs.prepare.outputs.previous_version }}.$${platform} s3://downloads.${{ github.event.inputs.environment }}.rinawarptech.com/latest/RinaWarp-latest-$${platform}
+          done
+
+      - name: Invalidate CDN cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/latest/*"
+
+  rollback-api:
+    needs: prepare
+    if: ${{ github.event.inputs.components == 'all' || github.event.inputs.components == 'api' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.prepare.outputs.previous_version }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --name rinawarp-${{ github.event.inputs.environment }}
+
+      - name: Rollback deployment
+        run: |
+          kubectl rollout undo deployment/api -n rinawarp
+          kubectl rollout status deployment/api -n rinawarp
+
+  rollback-web:
+    needs: prepare
+    if: ${{ github.event.inputs.components == 'all' || github.event.inputs.components == 'web' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Bigsgotchu/rinawarptech-website
+          ref: v${{ needs.prepare.outputs.previous_version }}
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build website
+        run: yarn build
+        env:
+          NEXT_PUBLIC_API_URL: https://api.${{ github.event.inputs.environment }}.rinawarptech.com
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync out/ s3://${{ github.event.inputs.environment }}.rinawarptech.com/
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+  notify:
+    needs: [prepare, rollback-desktop, rollback-api, rollback-web]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify rollback status
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.ALERTS_CHANNEL_ID }}
+          slack-message: |
+            Rollback Status for ${{ github.event.inputs.environment }}:
+            • Version: ${{ needs.prepare.outputs.previous_version }}
+            • Components: ${{ github.event.inputs.components }}
+            • Desktop: ${{ needs.rollback-desktop.result || 'skipped' }}
+            • API: ${{ needs.rollback-api.result || 'skipped' }}
+            • Web: ${{ needs.rollback-web.result || 'skipped' }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
