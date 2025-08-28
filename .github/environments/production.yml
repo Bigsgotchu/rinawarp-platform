@@ -1,0 +1,27 @@
+name: production
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+environment:
+  name: production
+  url: https://rinawarptech.com
+
+variables:
+  AWS_REGION: us-west-2
+  NODE_ENV: production
+  API_URL: https://api.rinawarptech.com
+  S3_BUCKET: downloads.rinawarptech.com
+
+branch_protection_rules:
+  main:
+    required_status_checks:
+      - test
+      - build
+      - security-scan
+    required_pull_request_reviews: 2
+    enforce_admins: true
+    allow_force_pushes: false

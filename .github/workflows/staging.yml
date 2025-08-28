@@ -1,0 +1,145 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+env:
+  ELECTRON_VERSION: 28.1.0
+  NODE_VERSION: 20.x
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
+
+  build:
+    needs: test
+    environment: staging
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: macos
+            artifact: RinaWarp-staging.dmg
+          - os: windows-latest
+            platform: windows
+            artifact: RinaWarp-staging.exe
+          - os: ubuntu-latest
+            platform: linux
+            artifact: RinaWarp-staging.AppImage
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build:${{ matrix.platform }}
+        env:
+          NODE_ENV: staging
+          API_URL: https://api.staging.rinawarptech.com
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Upload to staging S3
+        run: |
+          aws s3 cp dist/${{ matrix.artifact }} s3://downloads.staging.rinawarptech.com/
+          aws s3 cp dist/${{ matrix.artifact }} s3://downloads.staging.rinawarptech.com/latest/RinaWarp-latest-${{ matrix.platform }}.${{ endsWith(matrix.artifact, '.dmg') && 'dmg' || endsWith(matrix.artifact, '.exe') && 'exe' || 'AppImage' }}
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.rinawarptech.com
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Deploy API
+        run: |
+          aws eks update-kubeconfig --name rinawarp-staging
+          kubectl apply -f k8s/staging/
+
+      - name: Update staging website
+        uses: actions/checkout@v4
+        with:
+          repository: Bigsgotchu/rinawarptech-website
+          ref: develop
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+          path: website
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+          cache-dependency-path: website/yarn.lock
+
+      - name: Deploy website
+        run: |
+          cd website
+          yarn install --frozen-lockfile
+          yarn build
+          aws s3 sync out/ s3://staging.rinawarptech.com/
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+      - name: Notify on deployment
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.STAGING_ALERTS_CHANNEL_ID }}
+          slack-message: "🚀 New staging deployment\\nBranch: ${{ github.ref_name }}\\nCommit: ${{ github.sha }}\\nCheck it out: https://staging.rinawarptech.com"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
