@@ -1,0 +1,24 @@
+name: Environments Configuration
+
+environments:
+  production:
+    name: Production
+    url: https://rinawarptech.com
+    deployment_branch_policy:
+      protected_branches: true
+      custom_branches:
+        - main
+        - 'releases/**'
+    deployment_protection_rules:
+      - required_reviewers: 2
+      - wait_timer: 15
+
+  staging:
+    name: Staging
+    url: https://staging.rinawarptech.com
+    deployment_branch_policy:
+      protected_branches: false
+      custom_branches:
+        - develop
+        - 'feature/**'
+        - 'hotfix/**'

@@ -2,9 +2,16 @@ name: Deploy to ECS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - develop
     tags:
       - 'v*'
+
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
 
 env:
   AWS_REGION: us-west-2
@@ -20,6 +27,9 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      url: ${{ github.ref == 'refs/heads/main' && 'https://rinawarptech.com' || 'https://staging.rinawarptech.com' }}
 
     steps:
     - name: Checkout code
