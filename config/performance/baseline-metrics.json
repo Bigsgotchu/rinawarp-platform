@@ -1,0 +1,64 @@
+{
+  "staging": {
+    "api": {
+      "avgResponseTime": 150,
+      "p95": 400,
+      "errorRate": 0.5,
+      "rps": 200,
+      "latencyBreakdown": {
+        "ai_completion": 300,
+        "file_search": 100,
+        "user_operations": 50,
+        "database_queries": 30
+      }
+    },
+    "electron": {
+      "startupTime": 1500,
+      "memoryUsage": 150,
+      "cpuUsage": 8,
+      "resourceMetrics": {
+        "initial_load": 800,
+        "idle_state": 50,
+        "active_completion": 200,
+        "file_indexing": 300
+      }
+    },
+    "web": {
+      "firstContentfulPaint": 1200,
+      "largestContentfulPaint": 2500,
+      "firstInputDelay": 100,
+      "cumulativeLayoutShift": 0.1
+    }
+  },
+  "production": {
+    "api": {
+      "avgResponseTime": 100,
+      "p95": 300,
+      "errorRate": 0.1,
+      "rps": 500,
+      "latencyBreakdown": {
+        "ai_completion": 250,
+        "file_search": 80,
+        "user_operations": 30,
+        "database_queries": 20
+      }
+    },
+    "electron": {
+      "startupTime": 1000,
+      "memoryUsage": 120,
+      "cpuUsage": 5,
+      "resourceMetrics": {
+        "initial_load": 600,
+        "idle_state": 30,
+        "active_completion": 150,
+        "file_indexing": 250
+      }
+    },
+    "web": {
+      "firstContentfulPaint": 800,
+      "largestContentfulPaint": 2000,
+      "firstInputDelay": 80,
+      "cumulativeLayoutShift": 0.05
+    }
+  }
+}

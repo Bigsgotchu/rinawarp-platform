@@ -5,6 +5,8 @@
     "packages/*"
   ],
   "scripts": {
+    "test:performance": "playwright test tests/performance/user-flows.js",
+    "test:baseline": "node scripts/update-baseline.js",
     "build:macos": "electron-builder --mac",
     "build:windows": "electron-builder --win",
     "build:linux": "electron-builder --linux",
@@ -19,6 +21,7 @@
     "deploy:prod": "docker-compose -f docker-compose.prod.yml up -d --build"
   },
   "devDependencies": {
+    "@playwright/test": "^1.39.0",
     "@electron-forge/cli": "^7.2.0",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
