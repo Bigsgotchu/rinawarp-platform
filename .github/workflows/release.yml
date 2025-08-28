@@ -1,0 +1,177 @@
+name: Release Process
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  ELECTRON_VERSION: 28.1.0
+  NODE_VERSION: 20.x
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Get version
+        id: get-version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: macos
+            artifact: RinaWarp-${{ github.event.release.tag_name }}.dmg
+            build_cmd: yarn build:macos
+          - platform: windows
+            artifact: RinaWarp-${{ github.event.release.tag_name }}.exe
+            build_cmd: yarn build:windows
+          - platform: linux
+            artifact: RinaWarp-${{ github.event.release.tag_name }}.AppImage
+            build_cmd: yarn build:linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: ${{ matrix.build_cmd }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp dist/${{ matrix.artifact }} s3://downloads.rinawarptech.com/
+          # Also upload to latest folder
+          aws s3 cp dist/${{ matrix.artifact }} s3://downloads.rinawarptech.com/latest/RinaWarp-latest-${{ matrix.platform }}.${{ matrix.ext }}
+
+      - name: Create CloudFront invalidation
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+      - name: Update download URLs in database
+        run: |
+          curl -X POST ${{ secrets.API_URL }}/downloads/update \
+            -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "platform": "${{ matrix.platform }}",
+              "version": "${{ needs.prepare.outputs.version }}",
+              "url": "https://downloads.rinawarptech.com/${{ matrix.artifact }}"
+            }'
+
+  update-website:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Bigsgotchu/rinawarptech-website
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Update version and download URLs
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          DATE=$(date +"%B %d, %Y")
+          
+          # Update download page version and dates
+          sed -i "s/version: '[^']*'/version: '$VERSION'/g" src/app/download/page.tsx
+          sed -i "s/releaseDate: '[^']*'/releaseDate: '$DATE'/g" src/app/download/page.tsx
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.WEBSITE_REPO_TOKEN }}
+          commit-message: "chore: update download links for version ${{ needs.prepare.outputs.version }}"
+          title: "Update download links for version ${{ needs.prepare.outputs.version }}"
+          body: |
+            Updates website with new download links for version ${{ needs.prepare.outputs.version }}
+            
+            - Updates version numbers
+            - Updates release dates
+            - Updates download URLs
+          branch: "release/${{ needs.prepare.outputs.version }}"
+          base: "main"
+          labels: "automated,release"
+
+  create-changelog:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        uses: github-changelog-generator/github-changelog-generator@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          future-release: v${{ needs.prepare.outputs.version }}
+          
+      - name: Create Pull Request with changelog
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: update changelog for ${{ needs.prepare.outputs.version }}"
+          title: "Update CHANGELOG.md for version ${{ needs.prepare.outputs.version }}"
+          body: |
+            Updates CHANGELOG.md for version ${{ needs.prepare.outputs.version }}
+          branch: "changelog/${{ needs.prepare.outputs.version }}"
+          base: "main"
+          labels: "documentation"
+
+  notify:
+    needs: [build, update-website, create-changelog]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on success
+        if: needs.build.result == 'success' && needs.update-website.result == 'success'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "✅ Successfully released version ${{ needs.prepare.outputs.version }}\n• Builds uploaded to S3\n• Website updated\n• Changelog generated"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Notify on failure
+        if: needs.build.result == 'failure' || needs.update-website.result == 'failure'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "❌ Release ${{ needs.prepare.outputs.version }} failed\nPlease check GitHub Actions for details"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

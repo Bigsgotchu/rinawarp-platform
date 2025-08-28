@@ -1,0 +1,60 @@
+appId: com.rinawarptech.terminal
+productName: RinaWarp Terminal
+copyright: Copyright © 2025 Rinawarp Technologies, LLC
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+  icon: build/icon.icns
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+dmg:
+  sign: false
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  publisherName: Rinawarp Technologies, LLC
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: true
+
+linux:
+  target:
+    - AppImage
+  category: Development
+  icon: build/icon.png
+  description: The World's First Terminal with FREE Ultra-Fast AI
+
+publish:
+  provider: generic
+  url: https://downloads.rinawarptech.com/
+  channel: latest

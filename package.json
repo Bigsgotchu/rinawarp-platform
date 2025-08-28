@@ -5,6 +5,9 @@
     "packages/*"
   ],
   "scripts": {
+    "build:macos": "electron-builder --mac",
+    "build:windows": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
     "test": "jest",
     "test:e2e": "cypress run",
     "test:e2e:open": "cypress open",
@@ -16,6 +19,9 @@
     "deploy:prod": "docker-compose -f docker-compose.prod.yml up -d --build"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.2.0",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.9",
