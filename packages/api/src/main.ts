@@ -9,9 +9,9 @@ import cors from 'cors';
 const envPath = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
 dotenv.config({ path: envPath });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const HOST = process.env.HOST || 'localhost';
-const CORS_ORIGIN = process.env.FRONTEND_URL || 'http://localhost:3000';
+const CORS_ORIGIN = process.env.FRONTEND_URL || 'https://rinawarptech.com';
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
