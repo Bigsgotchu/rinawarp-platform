@@ -15,6 +15,30 @@ env:
   NODE_VERSION: 20.x
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
+
   prepare:
     runs-on: ubuntu-latest
     outputs:
@@ -35,13 +59,17 @@ jobs:
       matrix:
         include:
           - platform: macos
-            artifact: RinaWarp-${{ github.event.release.tag_name }}.dmg
+            os: macos-latest
+            artifact: RinaWarp-${{ needs.prepare.outputs.version }}.dmg
             build_cmd: yarn build:macos
+            cert_name: Developer ID Application: Rinawarp Technologies, LLC (XXXXXXXXXX)
           - platform: windows
-            artifact: RinaWarp-${{ github.event.release.tag_name }}.exe
+            os: windows-latest
+            artifact: RinaWarp-${{ needs.prepare.outputs.version }}.exe
             build_cmd: yarn build:windows
           - platform: linux
-            artifact: RinaWarp-${{ github.event.release.tag_name }}.AppImage
+            os: ubuntu-latest
+            artifact: RinaWarp-${{ needs.prepare.outputs.version }}.AppImage
             build_cmd: yarn build:linux
 
     steps:
@@ -56,7 +84,36 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Import Apple Developer Certificate
+        if: matrix.platform == 'macos'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.cert_name }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p '' build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p '' build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k '' build.keychain
+
+      - name: Setup Windows Code Signing
+        if: matrix.platform == 'windows'
+        env:
+          WINDOWS_PFX: ${{ secrets.WINDOWS_PFX }}
+          WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
+        run: |
+          echo "$WINDOWS_PFX" | base64 --decode > windows_certificate.pfx
+
       - name: Build application
+        env:
+          CSC_LINK: ${{ matrix.platform == 'macos' && './certificate.p12' || matrix.platform == 'windows' && './windows_certificate.pfx' || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'macos' && secrets.APPLE_CERTIFICATE_PASSWORD || matrix.platform == 'windows' && secrets.WINDOWS_PFX_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.platform == 'macos' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'macos' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
         run: ${{ matrix.build_cmd }}
 
       - name: Configure AWS credentials
@@ -128,9 +185,9 @@ jobs:
           labels: "automated,release"
 
   create-changelog:
-    needs: prepare
-    runs-on: ubuntu-latest
-    steps:
+needs: [prepare, test]
+    runs-on: ${{ matrix.os }}
+    strategy:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0

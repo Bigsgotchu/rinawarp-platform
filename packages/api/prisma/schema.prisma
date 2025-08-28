@@ -144,6 +144,32 @@ model EmailPreferences {
   updatedAt           DateTime  @updatedAt
 }
 
+model Download {
+  id        String   @id @default(cuid())
+  platform  String   // macos, windows, linux
+  version   String
+  userAgent String?
+  ipAddress String?
+  referer   String?
+  createdAt DateTime @default(now())
+
+  @@index([platform, version])
+  @@index([createdAt])
+}
+
+model DownloadUrl {
+  id        String   @id @default(cuid())
+  platform  String   // macos, windows, linux
+  version   String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platform, version])
+  @@index([platform])
+  @@index([version])
+}
+
 model LicenseKey {
   id          String    @id @default(cuid())
   key         String    @unique
