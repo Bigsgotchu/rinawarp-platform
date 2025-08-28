@@ -3,7 +3,7 @@ resource "aws_elasticache_replication_group" "main" {
   replication_group_description = "Redis cluster for ${var.cluster_id}"
   node_type                     = var.node_type
   port                         = var.port
-  parameter_group_family       = "redis6.x"
+  parameter_group_name          = "default.redis6.x"
   automatic_failover_enabled   = var.automatic_failover_enabled
   multi_az_enabled            = var.multi_az_enabled
   number_cache_clusters       = var.num_cache_nodes

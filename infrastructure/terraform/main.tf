@@ -240,7 +240,20 @@ resource "random_password" "cookie" {
   special = true
 }
 
+# GitHub Actions Role
+module "github_actions" {
+  source = "./modules/github-actions"
+
+  github_org  = "Bigsgotchu"
+  github_repo = "rinawarp"
+}
+
 # Outputs
+output "github_actions_role_arn" {
+  value       = module.github_actions.role_arn
+  description = "The ARN of the IAM role for GitHub Actions"
+}
+
 output "kubeconfig_command" {
   description = "Command to configure kubectl"
   value       = "aws eks update-kubeconfig --name rinawarp-${var.environment} --region ${var.aws_region}"
