@@ -1,0 +1,141 @@
+name: Performance Testing
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      test_duration:
+        description: 'Test duration in minutes'
+        required: true
+        default: '5'
+        type: string
+
+env:
+  K6_VERSION: 0.47.0
+  NODE_VERSION: 20.x
+
+jobs:
+  api-load-test:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          curl -L https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz | tar xz
+          sudo mv k6-v${{ env.K6_VERSION }}-linux-amd64/k6 /usr/local/bin
+
+      - name: Run API load test
+        run: |
+          k6 run \
+            -e API_URL=https://api.${{ github.event.inputs.environment || 'staging' }}.rinawarptech.com \
+            -e DURATION=${{ github.event.inputs.test_duration || '5' }}m \
+            tests/performance/api-load.js
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: k6-results
+          path: k6-results.json
+
+  electron-performance:
+    runs-on: macos-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build test app
+        run: yarn build:test
+        env:
+          NODE_ENV: test
+          API_URL: https://api.${{ github.event.inputs.environment || 'staging' }}.rinawarptech.com
+
+      - name: Run performance tests
+        run: yarn test:performance
+        env:
+          TEST_DURATION: ${{ github.event.inputs.test_duration || '5' }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: electron-performance-results
+          path: performance-results.json
+
+  analyze:
+    needs: [api-load-test, electron-performance]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results
+
+      - name: Analyze results
+        run: |
+          node scripts/analyze-performance.js \
+            --k6-results test-results/k6-results.json \
+            --electron-results test-results/electron-performance-results.json \
+            --baseline baseline-metrics.json
+
+      - name: Generate report
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('performance-analysis.json', 'utf8'));
+            
+            const summary = `## Performance Test Results
+            
+            ### API Performance
+            - Average Response Time: ${results.api.avgResponseTime}ms
+            - 95th Percentile: ${results.api.p95}ms
+            - Error Rate: ${results.api.errorRate}%
+            - Throughput: ${results.api.rps} req/s
+            
+            ### Desktop App Performance
+            - Startup Time: ${results.electron.startupTime}ms
+            - Memory Usage: ${results.electron.memoryUsage}MB
+            - CPU Usage: ${results.electron.cpuUsage}%
+            
+            ${results.regressions.length > 0 ? '### Performance Regressions\n' + results.regressions.join('\n') : ''}
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Performance Test Results - ${new Date().toISOString().split('T')[0]}`,
+              body: summary,
+              labels: ['performance'],
+            });
+
+      - name: Alert on regressions
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.PERFORMANCE_ALERTS_CHANNEL_ID }}
+          slack-message: "🔥 Performance regression detected\\nEnvironment: ${{ github.event.inputs.environment || 'staging' }}\\nCheck the results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
