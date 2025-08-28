@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Redis } from 'ioredis';
-import { Logger } from '@rinawarp/shared';
+import { logger } from '@rinawarp/shared';
 
 interface Experiment {
   id: string;
@@ -49,12 +49,10 @@ export class ABTestingService {
   private static instance: ABTestingService;
   private prisma: PrismaClient;
   private redis: Redis;
-  private logger: Logger;
 
   private constructor() {
     this.prisma = new PrismaClient();
     this.redis = new Redis(process.env.REDIS_URL || '');
-    this.logger = new Logger('ABTestingService');
   }
 
   public static getInstance(): ABTestingService {
@@ -81,7 +79,7 @@ export class ABTestingService {
 
       return this.mapExperimentFromDB(experiment);
     } catch (error) {
-      this.logger.error('Error fetching experiment', { error, id });
+      logger.error('Error fetching experiment', { error, id });
       return null;
     }
   }
@@ -122,7 +120,7 @@ export class ABTestingService {
 
       return this.mapExperimentFromDB(created);
     } catch (error) {
-      this.logger.error('Error creating experiment', { error, experiment });
+      logger.error('Error creating experiment', { error, experiment });
       throw error;
     }
   }
@@ -166,7 +164,7 @@ export class ABTestingService {
 
       return variant;
     } catch (error) {
-      this.logger.error('Error getting variant for user', { error, experimentId, userId });
+      logger.error('Error getting variant for user', { error, experimentId, userId });
       return null;
     }
   }
@@ -180,7 +178,7 @@ export class ABTestingService {
         }
       });
     } catch (error) {
-      this.logger.error('Error tracking experiment event', { error, event });
+      logger.error('Error tracking experiment event', { error, event });
     }
   }
 
@@ -204,7 +202,7 @@ export class ABTestingService {
       const key = `experiment:${assignment.experimentId}:user:${assignment.userId}`;
       await this.redis.set(key, JSON.stringify(assignment), 'EX', 86400); // 24 hours
     } catch (error) {
-      this.logger.error('Error saving assignment', { error, assignment });
+      logger.error('Error saving assignment', { error, assignment });
     }
   }
 
@@ -320,7 +318,7 @@ export class ABTestingService {
         results
       };
     } catch (error) {
-      this.logger.error('Error getting experiment results', { error, experimentId });
+      logger.error('Error getting experiment results', { error, experimentId });
       throw error;
     }
   }

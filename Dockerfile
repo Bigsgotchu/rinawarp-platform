@@ -1,48 +1,51 @@
-# Use Node.js 20 Alpine as base for minimal image size
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS builder
 
-# Set working directory for all subsequent operations
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ openssl openssl-dev
+
 WORKDIR /app
 
-# Install system dependencies required for node-gyp and other build tools
-# These are needed for building native modules and development tools
-RUN apk add --no-cache python3 make g++
-
-# Copy package.json files first to leverage Docker layer caching
-# This way, dependencies are only reinstalled if package.json changes
+# Copy package.json files
 COPY package*.json ./
 COPY packages/api/package*.json ./packages/api/
+COPY packages/core/package*.json ./packages/core/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/terminal/package*.json ./packages/terminal/
 
-# Install project dependencies
-# First install root dependencies (monorepo setup)
-# Then install API-specific dependencies
-RUN npm install
-RUN cd packages/api && npm install
+# Install dependencies
+RUN npm install -g pnpm
+RUN pnpm install
 
-# Install TypeScript globally for build tools
-# This is required for the build process but not for production runtime
-RUN npm install -g typescript
-
-# Copy the rest of the application code
-# This is done after dependency installation to leverage caching
+# Copy source code
 COPY . .
 
-# Generate Prisma client and build TypeScript code
-# This creates the production-ready JavaScript in dist/
-RUN cd packages/api && \
-    npx prisma generate && \
-    npm run build
+# Generate Prisma client
+RUN cd packages/api && npx prisma generate
 
-# Set working directory to the API package
-WORKDIR /app/packages/api
+# Build packages (exclude desktop from server image build)
+RUN pnpm -r --filter "!@rinawarp/desktop" run build
 
-# Configure production environment
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files and built artifacts
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/packages/api/package*.json ./packages/api/
+COPY --from=builder /app/packages/api/dist ./packages/api/dist
+COPY --from=builder /app/packages/api/node_modules ./packages/api/node_modules
+COPY --from=builder /app/node_modules ./node_modules
+
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Document the port that the application listens on
+# Expose port
 EXPOSE 3000
 
-# Start the application using the compiled JavaScript
-# We use the compiled code instead of ts-node for better performance
+# Start the application
+WORKDIR /app/packages/api
 CMD ["node", "dist/main.js"]

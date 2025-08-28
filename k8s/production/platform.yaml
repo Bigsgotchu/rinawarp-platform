@@ -13,11 +13,11 @@ spec:
       labels:
         app: platform
     spec:
+      imagePullSecrets:
+      - name: ghcr-cred
       containers:
       - name: platform
         image: ${GHCR_IMAGE}
-        imagePullSecrets:
-        - name: ghcr-cred
         ports:
         - containerPort: 3000
         envFrom:

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Redis } from 'ioredis';
-import { Logger } from '@rinawarp/shared';
+import { logger } from '@rinawarp/shared';
 
 interface FeatureFlag {
   name: string;
@@ -18,7 +18,6 @@ export class FeatureFlagService {
   private static instance: FeatureFlagService;
   private prisma: PrismaClient;
   private redis: Redis;
-  private logger: Logger;
   private cache: Map<string, FeatureFlag> = new Map();
   private cacheTimeout = 60 * 1000; // 1 minute
   private lastCacheUpdate = 0;
@@ -26,7 +25,6 @@ export class FeatureFlagService {
   private constructor() {
     this.prisma = new PrismaClient();
     this.redis = new Redis(process.env.REDIS_URL || '');
-    this.logger = new Logger('FeatureFlagService');
   }
 
   public static getInstance(): FeatureFlagService {
@@ -83,7 +81,7 @@ export class FeatureFlagService {
 
       return false;
     } catch (error) {
-      this.logger.error('Error checking feature flag', { error, featureName });
+      logger.error('Error checking feature flag', { error, featureName });
       return false;
     }
   }
@@ -134,7 +132,7 @@ export class FeatureFlagService {
 
       return featureFlag;
     } catch (error) {
-      this.logger.error('Error fetching feature flag', { error, name });
+      logger.error('Error fetching feature flag', { error, name });
       return null;
     }
   }
@@ -180,7 +178,7 @@ export class FeatureFlagService {
 
       return created;
     } catch (error) {
-      this.logger.error('Error creating feature flag', { error, flag });
+      logger.error('Error creating feature flag', { error, flag });
       throw error;
     }
   }
@@ -206,7 +204,7 @@ export class FeatureFlagService {
 
       return updated;
     } catch (error) {
-      this.logger.error('Error updating feature flag', { error, name, updates });
+      logger.error('Error updating feature flag', { error, name, updates });
       throw error;
     }
   }

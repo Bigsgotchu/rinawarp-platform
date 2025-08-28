@@ -53,6 +53,8 @@ module "eks" {
       
       labels = {
         "node.kubernetes.io/purpose" = "general"
+        "kubernetes.io/cluster-autoscaler/enabled" = "true"
+        "kubernetes.io/cluster-autoscaler/rinawarp-${var.environment}" = "owned"
       }
       
       taints = []
@@ -141,6 +143,13 @@ resource "aws_security_group" "rds" {
     protocol        = "tcp"
     security_groups = [module.eks.cluster_security_group_id]
   }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_security_group" "redis" {
@@ -154,36 +163,43 @@ resource "aws_security_group" "redis" {
     protocol        = "tcp"
     security_groups = [module.eks.cluster_security_group_id]
   }
-}
 
-# Route53 and DNS
-resource "aws_route53_zone" "main" {
-  name = var.domain_name
-}
-
-resource "aws_route53_record" "api" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "api.${var.domain_name}"
-  type    = "A"
-
-  alias {
-name                   = module.eks.endpoint
-    zone_id                = module.eks.cluster_zone_id
-    evaluate_target_health = true
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-# Certificate Manager
-resource "aws_acm_certificate" "main" {
-  domain_name       = "*.${var.domain_name}"
-  validation_method = "DNS"
+# Route53 and DNS (to be configured after ALB is created by AWS Load Balancer Controller)
+#resource "aws_route53_zone" "main" {
+#  name = var.domain_name
+#}
 
-  subject_alternative_names = [var.domain_name]
+#resource "aws_route53_record" "api" {
+#  zone_id = aws_route53_zone.main.zone_id
+#  name    = "api.${var.domain_name}"
+#  type    = "A"
 
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#  alias {
+#    name                   = var.alb_dns_name
+#    zone_id                = var.alb_zone_id
+#    evaluate_target_health = true
+#  }
+#}
+
+# Certificate Manager (to be configured after Route53 zone is created)
+#resource "aws_acm_certificate" "main" {
+#  domain_name       = "*.${var.domain_name}"
+#  validation_method = "DNS"
+
+#  subject_alternative_names = [var.domain_name]
+
+#  lifecycle {
+#    create_before_destroy = true
+#  }
+#}
 
 # CloudWatch Monitoring
 resource "aws_cloudwatch_log_group" "app" {
@@ -200,8 +216,6 @@ module "ecr" {
     module.eks.cluster_role_arn,
     data.aws_caller_identity.current.arn,
   ]
-
-  tags = var.tags
 }
 
 # Secrets Manager
@@ -259,10 +273,11 @@ output "kubeconfig_command" {
   value       = "aws eks update-kubeconfig --name rinawarp-${var.environment} --region ${var.aws_region}"
 }
 
-output "api_endpoint" {
-  description = "API endpoint"
-  value       = "https://api.${var.domain_name}"
-}
+# To be configured after ALB is created
+#output "api_endpoint" {
+#  description = "API endpoint"
+#  value       = "https://api.${var.domain_name}"
+#}
 
 output "db_endpoint" {
   description = "Database endpoint"

@@ -30,6 +30,10 @@ app.use(cors({
   credentials: true,
 }));
 
+// Rate limiting
+import { rateLimiterMiddleware } from './middleware/rate-limiter';
+app.use(rateLimiterMiddleware);
+
 // Stripe webhook must come before JSON body parser
 app.post(
   '/api/webhooks/stripe',
@@ -64,4 +68,5 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // Start server
 app.listen(PORT, HOST, () => {
   logger.info(`Server is running on http://${HOST}:${PORT}`);
+  logger.info('Rate limiting enabled: 100 requests per minute per IP');
 });

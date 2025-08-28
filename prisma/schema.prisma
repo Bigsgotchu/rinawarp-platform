@@ -21,6 +21,9 @@ model User {
   emailPreferences EmailPreferences?
   emailEvents      EmailEvent[]
   licenseKeys      LicenseKey[]
+  revenues        Revenue[]
+  transactions    Transaction[]
+  invoices        Invoice[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 }
@@ -52,6 +55,8 @@ model UserSubscription {
   currentPeriodEnd   DateTime
   cancelAtPeriodEnd  Boolean    @default(false)
   stripeSubscriptionId String   @unique
+  revenues    Revenue[]
+  invoices    Invoice[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 }

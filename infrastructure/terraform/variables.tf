@@ -43,3 +43,14 @@ variable "tags" {
     Project     = "Rinawarp"
   }
 }
+
+# To be configured after ALB is created
+#variable "alb_dns_name" {
+#  description = "DNS name of the ALB created by AWS Load Balancer Controller"
+#  type        = string
+#}
+#
+#variable "alb_zone_id" {
+#  description = "Zone ID of the ALB created by AWS Load Balancer Controller"
+#  type        = string
+#}
