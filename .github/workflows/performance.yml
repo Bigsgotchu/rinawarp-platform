@@ -12,6 +12,7 @@ on:
         options:
           - staging
           - production
+          - perf
       test_duration:
         description: 'Test duration in minutes'
         required: true

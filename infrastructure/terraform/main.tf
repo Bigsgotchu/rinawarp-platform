@@ -16,8 +16,12 @@ terraform {
     }
   }
 
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    bucket         = "rinawarp-terraform-state"
+    key            = "perf/terraform.tfstate"
+    region         = "us-west-2"
+    encrypt        = true
+    dynamodb_table = "rinawarp-terraform-locks"
   }
 }
 
