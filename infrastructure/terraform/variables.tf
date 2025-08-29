@@ -8,6 +8,12 @@ variable "aws_secret_key" {
   type        = string
 }
 
+variable "grafana_admin_password" {
+  description = "Initial admin password for Grafana"
+  type        = string
+  sensitive   = true
+}
+
 variable "aws_region" {
   description = "AWS region to deploy to"
   type        = string

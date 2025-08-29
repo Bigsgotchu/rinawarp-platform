@@ -1,0 +1,1 @@
+export TF_VAR_aws_access_key= && export TF_VAR_aws_secret_key= && terraform plan -target=module.perf_vpc -target=module.perf_eks -target=module.perf_monitoring -target=module.perf_rds -target=module.perf_redis -out=perf.tfplan

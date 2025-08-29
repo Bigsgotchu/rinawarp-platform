@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Create secrets file
+cat > terraform.tfvars << EOF
 aws_region = "us-west-2"
 environment = "perf"
 domain_name = "rinawarptech.com"
@@ -20,3 +24,16 @@ tags = {
 
 # Other configurations
 grafana_admin_password = "admin"  # Will be changed after initial setup
+EOF
+
+echo "Created terraform.tfvars with GitHub secrets"
+
+# Initialize and plan
+terraform init
+terraform plan \
+  -target=module.perf_vpc \
+  -target=module.perf_eks \
+  -target=module.perf_monitoring \
+  -target=module.perf_rds \
+  -target=module.perf_redis \
+  -out=perf.tfplan
