@@ -7,6 +7,16 @@ on:
     paths:
       - 'infrastructure/terraform/**'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - perf
+        default: 'perf'
 
 permissions:
   id-token: write
@@ -16,7 +26,7 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.event.inputs.environment || 'perf' }}
 
     defaults:
       run:
@@ -42,7 +52,7 @@ jobs:
         run: |
           terraform init \
             -backend-config="bucket=rinawarp-terraform-state" \
-            -backend-config="key=prod/terraform.tfstate" \
+            -backend-config="key=${{ github.event.inputs.environment || 'perf' }}/terraform.tfstate" \
             -backend-config="region=us-west-2" \
             -backend-config="encrypt=true" \
             -backend-config="dynamodb_table=rinawarp-terraform-locks"
@@ -51,14 +61,92 @@ jobs:
         run: terraform fmt -check
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: |
+          terraform plan \
+            -target=module.perf_vpc \
+            -target=module.perf_eks \
+            -target=module.perf_monitoring \
+            -target=module.perf_rds \
+            -target=module.perf_redis \
+            -out=tfplan
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_environment: ${{ github.event.inputs.environment || 'perf' }}
+
+      - name: Configure kubectl
+        if: success()
+        run: |
+          aws eks update-kubeconfig \
+            --name rinawarp-${{ github.event.inputs.environment || 'perf' }} \
+            --region us-west-2
+
+      - name: Deploy Monitoring Stack
+        if: success()
+        run: |
+          # Create monitoring namespace
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+          # Add Helm repositories
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+
+          # Install Prometheus
+          helm upgrade --install prometheus prometheus-community/prometheus \
+            --namespace monitoring \
+            --set server.retention=15d \
+            --set server.persistentVolume.size=50Gi \
+            --set alertmanager.enabled=true \
+            --set alertmanager.persistence.enabled=true
+
+          # Install Grafana
+          helm upgrade --install grafana grafana/grafana \
+            --namespace monitoring \
+            --set persistence.enabled=true \
+            --set persistence.size=10Gi \
+            --set service.type=LoadBalancer
+
+      - name: Get Access Information
+        if: success()
+        id: access_info
+        run: |
+          echo "Getting access information..."
+          
+          GRAFANA_PASSWORD=$(kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
+          GRAFANA_URL=$(kubectl get svc -n monitoring grafana -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          
+          echo "grafana_url=http://$GRAFANA_URL" >> $GITHUB_OUTPUT
+          echo "grafana_password=$GRAFANA_PASSWORD" >> $GITHUB_ENV
+
+      - name: Notify Success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.ALERTS_CHANNEL_ID }}
+          slack-message: |
+            🚀 Infrastructure deployment successful!
+            Environment: ${{ github.event.inputs.environment || 'perf' }}
+            Grafana URL: ${{ steps.access_info.outputs.grafana_url }}
+            Grafana Password: ${{ env.grafana_password }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Notify Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.ALERTS_CHANNEL_ID }}
+          slack-message: |
+            ❌ Infrastructure deployment failed!
+            Environment: ${{ github.event.inputs.environment || 'perf' }}
+            See details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
